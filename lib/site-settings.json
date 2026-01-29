@@ -1,0 +1,101 @@
+{
+  "hero": {
+    "title1": "LE CONFORT",
+    "title2": "ORIGINAL",
+    "subtitle": "À DAKAR",
+    "description": "Collection exclusive de Crocs authentiques",
+    "buttonText": "Découvrir",
+    "backgroundImage": "/background.webp"
+  },
+  "contact": {
+    "whatsapp": "221769359917",
+    "instagram": "@crocsdkr",
+    "location": "Dakar, Sénégal",
+    "email": "",
+    "hours": "7j/7 de 9h à 21h"
+  },
+  "store": {
+    "name": "Crocsdkr",
+    "slogan": "Le confort original à Dakar",
+    "description": "Votre boutique de référence pour les Crocs authentiques à Dakar."
+  },
+  "testimonials": [
+    {
+      "id": "1",
+      "name": "Amadou D.",
+      "comment": "Livraison rapide et produit authentique. Je recommande !",
+      "rating": 5,
+      "active": true
+    },
+    {
+      "id": "2",
+      "name": "Fatou S.",
+      "comment": "Le confort est incroyable. Service client au top.",
+      "rating": 5,
+      "active": true
+    },
+    {
+      "id": "3",
+      "name": "Ibrahima N.",
+      "comment": "Ma deuxième paire. Qualité irréprochable.",
+      "rating": 5,
+      "active": true
+    }
+  ],
+  "whyUs": [
+    {
+      "id": "1",
+      "icon": "Shield",
+      "title": "Produits authentiques",
+      "description": "100% authentiques, garantis.",
+      "active": true
+    },
+    {
+      "id": "2",
+      "icon": "Truck",
+      "title": "Livraison rapide",
+      "description": "Livraison à Dakar en 1-2 heures.",
+      "active": true
+    },
+    {
+      "id": "3",
+      "icon": "Award",
+      "title": "Qualité premium",
+      "description": "Sélection des meilleurs modèles.",
+      "active": true
+    },
+    {
+      "id": "4",
+      "icon": "Heart",
+      "title": "Service client",
+      "description": "Disponible via WhatsApp.",
+      "active": true
+    }
+  ],
+  "categories": [
+    {
+      "id": "classic",
+      "name": "Crocs Classic",
+      "description": "Le modèle emblématique",
+      "basePrice": 15000,
+      "active": true,
+      "order": 2
+    },
+    {
+      "id": "collaboration",
+      "name": "Bape x Crocs",
+      "description": "Édition limitée",
+      "basePrice": 20000,
+      "active": true,
+      "order": 1
+    }
+  ],
+  "admin": {
+    "password": "crcsndkr221"
+  },
+  "maintenance": {
+    "enabled": false,
+    "message": "Site en maintenance. Revenez bientôt !"
+  },
+  "productStatuses": {}
+}
