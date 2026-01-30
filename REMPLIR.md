@@ -4,24 +4,17 @@ Une seule feuille : tu coches au fur et à mesure.
 
 ---
 
-## 1. Vercel (ou hébergeur) – clés notifications
+## 1. Vercel (ou hébergeur) – notifs
 
 Sur [vercel.com](https://vercel.com) → ton projet → **Settings** → **Environment Variables** → **Add**.
 
-Dans Vercel : crée 2 variables. Pour obtenir les valeurs, lance `npm run vapid` en local et copie les deux lignes affichées dans Vercel (`VAPID_PUBLIC_KEY` et `VAPID_PRIVATE_KEY`).
-
-Sans ces deux variables, le site marche, mais tu ne recevras pas les notifs de commandes sur ton téléphone.
+Pour les notifications de commandes sur ton téléphone : crée 2 variables. Lance `npm run vapid` en local et copie les deux lignes dans Vercel (`VAPID_PUBLIC_KEY` et `VAPID_PRIVATE_KEY`). Sans ça, le site marche mais pas les notifs.
 
 ---
 
 ## 2. Accès admin
 
-| À savoir | Valeur actuelle |
-|----------|-----------------|
-| **URL admin** | `https://ton-site.com/amdycrcwst?k=amdycrcwst` |
-| **Mot de passe admin** | `crcsndkr221` |
-
-Pour changer le mot de passe ou le code secret : Admin → **Paramètres**.
+URL admin et mot de passe : tu les vois et tu les modifies dans **Admin → Paramètres** une fois connecté. Ne les écris pas dans REMPLIR ni dans un fichier public.
 
 ---
 
@@ -41,12 +34,11 @@ Aucun fichier à éditer : tout se fait dans les onglets de l’admin.
 
 ---
 
-## 4. Récap à garder sous la main
+## 4. Récap
 
-- **Site public** : `https://ton-domaine.vercel.app` (ou ton domaine)
-- **Admin** : même URL + `/amdycrcwst?k=amdycrcwst`
-- **Mot de passe admin** : `crcsndkr221` (à changer dans Paramètres si tu veux)
-- **Notifications** : après avoir mis `VAPID_PUBLIC_KEY` et `VAPID_PRIVATE_KEY` sur Vercel, ouvre l’admin sur ton téléphone → Paramètres → « Activer les notifications sur ce téléphone »
+- **Site public** : ton URL Vercel (ou ton domaine)
+- **Admin** : même URL + chemin et code que tu vois dans Admin → Paramètres
+- **Notifications** : après avoir mis les 2 clés VAPID sur Vercel, ouvre l’admin sur ton téléphone → Paramètres → « Activer les notifications sur ce téléphone »
 
 ---
 

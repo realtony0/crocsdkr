@@ -14,25 +14,18 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
   const [adminPassword, setAdminPassword] = useState('');
 
   useEffect(() => {
-    // Charger le mot de passe depuis les settings
     fetch('/api/settings?section=admin')
       .then(res => res.json())
       .then(data => {
-        if (data.password) {
-          setAdminPassword(data.password);
-        }
+        if (data.password) setAdminPassword(data.password);
       })
-      .catch(() => {
-        // Fallback
-        setAdminPassword('crcsndkr221');
-      });
+      .catch(() => {});
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-
     setTimeout(() => {
       if (password === adminPassword) {
         onLogin();
@@ -85,7 +78,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
 
             <button
               type="submit"
-              disabled={isLoading || !adminPassword}
+              disabled={isLoading || !password || !adminPassword}
               className="w-full bg-gray-900 text-white py-3 px-4 rounded-xl font-bold text-lg hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Connexion...' : 'Se connecter'}

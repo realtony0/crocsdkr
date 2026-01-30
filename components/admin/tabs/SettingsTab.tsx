@@ -7,7 +7,7 @@ const ADMIN_SECRET_PATH = '/amdycrcwst';
 
 interface SettingsTabProps {
   admin: {
-    password: string;
+    password?: string;
     urlCode?: string;
   };
   maintenance: {
@@ -295,7 +295,6 @@ export default function SettingsTab({ admin, maintenance, onUpdate, onLogout }: 
             <Key className="h-6 w-6 text-gray-600" />
             <h3 className="text-lg font-bold text-gray-900">Changer le mot de passe</h3>
           </div>
-          
           <div className="space-y-4 max-w-md">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
