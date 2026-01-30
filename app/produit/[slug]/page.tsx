@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { notFound } from 'next/navigation';
 import { getProductBySlug, Product } from '@/lib/products';
-import { config } from '@/lib/config';
 import ImageCarousel from '@/components/ImageCarousel';
+import OrderForm from '@/components/OrderForm';
+import { useCart } from '@/context/CartContext';
 import { motion } from 'framer-motion';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, ShoppingCart } from 'lucide-react';
 
 interface PageProps {
   params: {
@@ -17,7 +18,10 @@ interface PageProps {
 export default function ProductPage({ params }: PageProps) {
   const [product, setProduct] = useState<Product | undefined>(undefined);
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
+  const [showOrderForm, setShowOrderForm] = useState(false);
+  const [addedToCart, setAddedToCart] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     setMounted(true);
@@ -40,23 +44,22 @@ export default function ProductPage({ params }: PageProps) {
   const images = product.images || [];
   const price = product.basePrice.toLocaleString('fr-FR');
 
-  const handleWhatsAppOrder = () => {
+  const handleOrderClick = () => {
     if (!selectedSize) {
       alert('Veuillez sélectionner une pointure');
       return;
     }
+    setShowOrderForm(true);
+  };
 
-    const message = `Bonjour, je souhaite commander :
-    
-Produit : ${product.name}
-Couleur : ${product.color}
-Pointure : ${selectedSize}
-Prix : ${price} FCFA
-
-Merci !`;
-
-    const whatsappUrl = `https://wa.me/${config.whatsapp.phone}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+  const handleAddToCart = () => {
+    if (!selectedSize) {
+      alert('Veuillez sélectionner une pointure');
+      return;
+    }
+    addToCart(product.slug, selectedSize);
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 2000);
   };
 
   return (
@@ -116,26 +119,47 @@ Merci !`;
               </div>
             </div>
 
-            <motion.button
-              onClick={handleWhatsAppOrder}
-              disabled={!selectedSize}
-              className="w-full bg-primary-600 text-white py-4 px-6 rounded-xl font-semibold text-lg flex items-center justify-center space-x-2 hover:bg-primary-700 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
-              whileHover={{ scale: selectedSize ? 1.02 : 1 }}
-              whileTap={{ scale: selectedSize ? 0.98 : 1 }}
-            >
-              <ShoppingBag className="h-5 w-5" />
-              <span>Commander via WhatsApp</span>
-            </motion.button>
+            <div className="flex gap-3">
+              <motion.button
+                onClick={handleAddToCart}
+                disabled={!selectedSize}
+                className="flex-1 bg-gray-900 text-white py-4 px-6 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:bg-gray-800 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
+                whileHover={{ scale: selectedSize ? 1.02 : 1 }}
+                whileTap={{ scale: selectedSize ? 0.98 : 1 }}
+              >
+                <ShoppingCart className="h-5 w-5" />
+                <span>{addedToCart ? 'Ajouté !' : 'Ajouter au panier'}</span>
+              </motion.button>
+              <motion.button
+                onClick={handleOrderClick}
+                disabled={!selectedSize}
+                className="flex-1 bg-primary-600 text-white py-4 px-6 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:bg-primary-700 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                whileHover={{ scale: selectedSize ? 1.02 : 1 }}
+                whileTap={{ scale: selectedSize ? 0.98 : 1 }}
+              >
+                <ShoppingBag className="h-5 w-5" />
+                <span>Commander</span>
+              </motion.button>
+            </div>
+
+            {showOrderForm && product && (
+              <OrderForm
+                product={product}
+                selectedSize={selectedSize}
+                onClose={() => setShowOrderForm(false)}
+                onSuccess={() => alert('Commande enregistrée. Nous vous contacterons pour confirmer.')}
+              />
+            )}
 
             <div className="pt-6 border-t border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">
                 Informations
               </h3>
               <ul className="space-y-2 text-gray-600">
-                <li>✓ Livraison rapide dans Dakar (24-48h)</li>
+                <li>✓ Livraison rapide dans Dakar (1-2h)</li>
                 <li>✓ Produit 100% authentique</li>
                 <li>✓ Paiement à la livraison disponible</li>
-                <li>✓ Service client disponible via WhatsApp</li>
+                <li>✓ Confirmation de commande après envoi du formulaire</li>
               </ul>
             </div>
           </motion.div>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { 
   LogOut, Package, Settings, MessageSquare, Award, 
-  Layers, Home, Shield, RefreshCw
+  Layers, Home, Shield, RefreshCw, ShoppingBag
 } from 'lucide-react';
 import { getAllProducts, Product } from '@/lib/products';
 import ProductsTab from './tabs/ProductsTab';
@@ -13,15 +13,17 @@ import TestimonialsTab from './tabs/TestimonialsTab';
 import WhyUsTab from './tabs/WhyUsTab';
 import CategoriesTab from './tabs/CategoriesTab';
 import SettingsTab from './tabs/SettingsTab';
+import OrdersTab from './tabs/OrdersTab';
 
 interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type TabType = 'products' | 'hero' | 'contact' | 'testimonials' | 'whyus' | 'categories' | 'settings';
+type TabType = 'products' | 'orders' | 'hero' | 'contact' | 'testimonials' | 'whyus' | 'categories' | 'settings';
 
 const tabs = [
   { id: 'products' as TabType, label: 'Produits', icon: Package },
+  { id: 'orders' as TabType, label: 'Commandes', icon: ShoppingBag },
   { id: 'hero' as TabType, label: 'Page d\'accueil', icon: Home },
   { id: 'contact' as TabType, label: 'Contact', icon: MessageSquare },
   { id: 'testimonials' as TabType, label: 'Témoignages', icon: MessageSquare },
@@ -164,6 +166,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           <div className="bg-white rounded-xl shadow-sm">
             {activeTab === 'products' && (
               <ProductsTab products={products} onRefresh={loadData} />
+            )}
+            {activeTab === 'orders' && (
+              <OrdersTab />
             )}
             {activeTab === 'hero' && settings && (
               <HeroTab settings={settings.hero} onUpdate={handleSettingsUpdate} />

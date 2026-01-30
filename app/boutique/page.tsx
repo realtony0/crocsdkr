@@ -78,8 +78,8 @@ export default function BoutiquePage() {
         </div>
       </section>
 
-      {/* Bape x Crocs Section */}
-      <section id="bape" className="py-20 md:py-28 bg-gradient-to-b from-gray-900 to-black">
+      {/* Bape x Crocs Section - même style que Classics */}
+      <section id="bape" className="py-20 md:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div 
             className="text-center mb-16"
@@ -88,25 +88,25 @@ export default function BoutiquePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <span className="inline-block px-4 py-2 bg-white/10 text-white text-xs font-bold uppercase tracking-widest rounded-full mb-6">
+            <span className="inline-block px-4 py-2 bg-primary-100 text-primary-700 text-xs font-bold uppercase tracking-widest rounded-full mb-6">
               Édition Limitée
             </span>
-            <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-white tracking-tight">
+            <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-gray-900 tracking-tight">
               BAPE x CROCS
             </h2>
-            <p className="text-gray-400 text-lg md:text-xl mt-6 max-w-2xl mx-auto">
+            <p className="text-gray-600 text-lg md:text-xl mt-6 max-w-2xl mx-auto">
               La collaboration streetwear la plus exclusive. Design camouflage iconique, confort légendaire.
             </p>
           </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
             {bapeProducts.map((product, index) => (
               <motion.div
                 key={product.id}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                transition={{ duration: 0.5, delay: index * 0.05 }}
               >
                 <ProductCard product={product} index={index} />
               </motion.div>

@@ -5,10 +5,13 @@ import { usePathname } from 'next/navigation';
 import { Menu, X, ShoppingBag } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useCart } from '@/context/CartContext';
 
 export default function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { getCount } = useCart();
+  const cartCount = getCount();
 
   const navItems = [
     { href: '/', label: 'Accueil' },
@@ -76,12 +79,18 @@ export default function Header() {
 
           {/* Right Column - Actions */}
           <div className="flex items-center justify-end flex-1 space-x-4">
-            <button
-              className="hidden md:flex items-center justify-center w-10 h-10 text-white hover:text-primary-400 transition-colors"
+            <Link
+              href="/panier"
+              className="relative flex items-center justify-center w-10 h-10 text-white hover:text-primary-400 transition-colors"
               aria-label="Panier"
             >
               <ShoppingBag className="h-5 w-5" />
-            </button>
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-primary-500 text-white text-xs font-bold rounded-full">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </Link>
             
             <button
               className="lg:hidden p-2 text-white hover:text-primary-400 transition-colors"
@@ -121,6 +130,14 @@ export default function Header() {
                   </Link>
                 );
               })}
+              <Link
+                href="/panier"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-900"
+              >
+                <ShoppingBag className="h-5 w-5" />
+                Panier {cartCount > 0 && `(${cartCount})`}
+              </Link>
             </div>
           </motion.div>
         )}
