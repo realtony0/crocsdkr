@@ -146,11 +146,7 @@ export default function PanierPage() {
           items={lineItems}
           totalPrice={totalPrice}
           onClose={() => setShowCheckout(false)}
-          onSuccess={() => {
-            clearCart();
-            alert('Commande enregistrée. Nous vous contacterons pour confirmer.');
-            window.location.href = '/';
-          }}
+          onSuccess={() => clearCart()}
         />
       )}
     </div>

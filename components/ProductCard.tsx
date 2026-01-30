@@ -12,7 +12,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, index = 0 }: ProductCardProps) {
-  const mainImage = product.images[0] || '/placeholder.jpg';
+  const mainImage = product.images?.[0];
   const price = product.basePrice.toLocaleString('fr-FR');
 
   return (
@@ -23,15 +23,21 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
       >
         {/* Image Container */}
         <div className="relative aspect-square overflow-hidden bg-gray-50">
-          <Image
-            src={mainImage}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-110"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            quality={75}
-            priority={index < 4}
-          />
+          {mainImage ? (
+            <Image
+              src={mainImage}
+              alt={product.name}
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              quality={75}
+              priority={index < 4}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm font-medium">
+              Image non disponible
+            </div>
+          )}
           
           {/* Hover Overlay */}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-500" />

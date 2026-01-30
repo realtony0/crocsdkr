@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ShoppingBag, Phone, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface Order {
@@ -37,27 +37,56 @@ interface Order {
   message?: string;
 }
 
+function playNewOrderSound() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 800;
+    gain.gain.value = 0.15;
+    osc.start();
+    osc.stop(ctx.currentTime + 0.15);
+  } catch (_) {}
+}
+
 export default function OrdersTab() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [newOrderToast, setNewOrderToast] = useState<string | null>(null);
+  const previousCountRef = useRef<number>(-1);
+
+  const loadOrders = async (silent = false) => {
+    if (!silent) setIsLoading(true);
+    try {
+      const response = await fetch('/api/orders');
+      const data = await response.json();
+      const list = Array.isArray(data) ? data : [];
+      const prev = previousCountRef.current;
+      if (prev >= 0 && list.length > prev) {
+        setNewOrderToast(`Nouvelle commande ! (${list.length - prev})`);
+        playNewOrderSound();
+        setTimeout(() => setNewOrderToast(null), 4000);
+      }
+      previousCountRef.current = list.length;
+      setOrders(list);
+    } catch (error) {
+      console.error('Erreur:', error);
+      setOrders([]);
+    }
+    if (!silent) setIsLoading(false);
+  };
 
   useEffect(() => {
     loadOrders();
   }, []);
 
-  const loadOrders = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/orders');
-      const data = await response.json();
-      setOrders(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Erreur:', error);
-      setOrders([]);
-    }
-    setIsLoading(false);
-  };
+  useEffect(() => {
+    const interval = setInterval(() => loadOrders(true), 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -89,11 +118,17 @@ export default function OrdersTab() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 relative">
+      {newOrderToast && (
+        <div className="fixed top-20 right-6 z-50 px-4 py-3 bg-primary-600 text-white rounded-xl shadow-lg font-bold animate-[fadeIn_0.3s_ease-out] flex items-center gap-2">
+          <ShoppingBag className="h-5 w-5" />
+          {newOrderToast}
+        </div>
+      )}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-black text-gray-900">Commandes</h2>
         <button
-          onClick={loadOrders}
+          onClick={() => loadOrders(false)}
           className="text-sm font-bold text-primary-600 hover:text-primary-700"
         >
           Actualiser

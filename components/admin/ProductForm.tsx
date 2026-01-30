@@ -250,6 +250,7 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
               <div className="grid grid-cols-4 gap-3">
                 {images.map((image, index) => (
                   <div key={index} className="relative group aspect-square">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={image}
                       alt={`Image ${index + 1}`}
@@ -279,6 +280,7 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
               <div className="grid grid-cols-4 gap-3 mb-4">
                 {newFiles.map((file, index) => (
                   <div key={index} className="relative group aspect-square">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={URL.createObjectURL(file)}
                       alt={`Nouveau ${index + 1}`}

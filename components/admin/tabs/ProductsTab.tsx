@@ -222,11 +222,14 @@ function ProductRow({
       !isActive ? 'bg-gray-50 opacity-60' : 'bg-white hover:bg-gray-50'
     }`}>
       {product.images[0] && (
-        <img
-          src={product.images[0]}
-          alt={product.name}
-          className="w-14 h-14 object-cover rounded-lg flex-shrink-0"
-        />
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={product.images[0]}
+            alt={product.name}
+            className="w-14 h-14 object-cover rounded-lg flex-shrink-0"
+          />
+        </>
       )}
       
       <div className="flex-1 min-w-0">

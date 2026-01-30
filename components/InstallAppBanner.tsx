@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { X, Download } from 'lucide-react';
 
 const BANNER_KEY = 'crocsdkr_install_banner_hide';
@@ -50,7 +51,7 @@ export default function InstallAppBanner() {
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900 text-white p-4 shadow-lg border-t border-gray-700 safe-area-pb">
       <div className="max-w-lg mx-auto flex items-center gap-4">
         <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
-          <img src="/logo-noir.png" alt="" className="w-8 h-8 object-contain" />
+          <Image src="/logo-noir.png" alt="" width={32} height={32} className="object-contain" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-bold text-sm">Installer Crocsdkr</p>

@@ -1,5 +1,9 @@
-import { notFound } from 'next/navigation';
+import AdminPageClient from '@/components/admin/AdminPageClient';
+
+export const metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default function AdminPage() {
-  notFound();
+  return <AdminPageClient urlCode="admin" />;
 }

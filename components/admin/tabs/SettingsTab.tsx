@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, Key, AlertTriangle, Power, Lock, Copy, Bell } from 'lucide-react';
 
 const ADMIN_SECRET_PATH = '/amdycrcwst';
@@ -27,6 +27,15 @@ export default function SettingsTab({ admin, maintenance, onUpdate, onLogout }: 
   const [isLoading, setIsLoading] = useState(false);
   const [pushStatus, setPushStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
   const [pushError, setPushError] = useState('');
+  const [isSimpleAdmin, setIsSimpleAdmin] = useState(false);
+  const [adminLink, setAdminLink] = useState('');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const simple = window.location.pathname === '/admin';
+    setIsSimpleAdmin(simple);
+    setAdminLink(simple ? `${window.location.origin}/admin` : `${window.location.origin}${ADMIN_SECRET_PATH}?k=${encodeURIComponent(urlCode)}`);
+  }, [urlCode]);
 
   function urlBase64ToUint8Array(base64String: string): Uint8Array {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -142,13 +151,10 @@ export default function SettingsTab({ admin, maintenance, onUpdate, onLogout }: 
     }
   };
 
-  const secretUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}${ADMIN_SECRET_PATH}?k=${encodeURIComponent(urlCode)}`
-    : '';
-
   const handleCopyUrl = () => {
-    if (secretUrl && navigator.clipboard) {
-      navigator.clipboard.writeText(secretUrl);
+    const url = adminLink || (typeof window !== 'undefined' ? (window.location.pathname === '/admin' ? `${window.location.origin}/admin` : `${window.location.origin}${ADMIN_SECRET_PATH}?k=${encodeURIComponent(urlCode)}`) : '');
+    if (url && navigator.clipboard) {
+      navigator.clipboard.writeText(url);
       alert('URL copiée dans le presse-papier.');
     }
   };
@@ -210,41 +216,49 @@ export default function SettingsTab({ admin, maintenance, onUpdate, onLogout }: 
       </div>
 
       <div className="space-y-8">
-        {/* URL secrète admin */}
+        {/* Accès admin */}
         <div className="bg-gray-50 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-4">
             <Lock className="h-6 w-6 text-gray-600" />
-            <h3 className="text-lg font-bold text-gray-900">Accès admin (URL secrète)</h3>
+            <h3 className="text-lg font-bold text-gray-900">{isSimpleAdmin ? 'Accès admin' : 'Accès admin (URL secrète)'}</h3>
           </div>
-          <p className="text-gray-600 text-sm mb-4">
-            L&apos;admin n&apos;est pas liée au site. Utilisez cette URL (avec le code) pour y accéder. Ne la partagez pas.
-          </p>
+          {isSimpleAdmin ? (
+            <p className="text-gray-600 text-sm mb-4">
+              Lien direct. Ne le partagez pas. Protégé par mot de passe.
+            </p>
+          ) : (
+            <p className="text-gray-600 text-sm mb-4">
+              L&apos;admin n&apos;est pas liée au site. Utilisez cette URL (avec le code) pour y accéder. Ne la partagez pas.
+            </p>
+          )}
           <div className="space-y-4 max-w-lg">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Code secret (paramètre ?k=)</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={urlCode}
-                  onChange={(e) => setUrlCode(e.target.value)}
-                  className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-600 focus:outline-none font-mono"
-                  placeholder="amdycrcwst"
-                />
-                <button
-                  onClick={handleSaveUrlCode}
-                  className="px-4 py-2 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800"
-                >
-                  Enregistrer
-                </button>
+            {!isSimpleAdmin && (
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Code secret (paramètre ?k=)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={urlCode}
+                    onChange={(e) => setUrlCode(e.target.value)}
+                    className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-600 focus:outline-none font-mono"
+                    placeholder="amdycrcwst"
+                  />
+                  <button
+                    onClick={handleSaveUrlCode}
+                    className="px-4 py-2 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800"
+                  >
+                    Enregistrer
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">URL d&apos;accès</label>
               <div className="flex gap-2">
                 <input
                   type="text"
                   readOnly
-                  value={secretUrl}
+                  value={adminLink}
                   className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl bg-white text-gray-700 text-sm font-mono"
                 />
                 <button

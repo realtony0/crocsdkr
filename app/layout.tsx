@@ -13,7 +13,10 @@ export const metadata: Metadata = {
   description: "Boutique officielle de Crocs à Dakar. Découvrez notre collection de chaussures confortables et stylées. Livraison rapide dans toute la ville.",
   keywords: "Crocs, Dakar, chaussures, confort, boutique, Sénégal",
   manifest: "/manifest.json",
-  icons: { apple: "/logo-noir.png" },
+  icons: {
+    icon: "/logo-noir.png",
+    apple: "/logo-noir.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

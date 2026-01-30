@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Menu, X, ShoppingBag } from 'lucide-react';
 import { useState } from 'react';
@@ -33,12 +34,12 @@ export default function Header() {
                 whileTap={{ scale: 0.95 }}
                 style={{ width: '56px', height: '56px', minWidth: '56px' }}
               >
-                <img
+                <Image
                   src="/logo-noir.png"
                   alt="Crocsdkr Logo"
                   width={56}
                   height={56}
-                  className="w-full h-full object-contain"
+                  className="object-contain"
                 />
               </motion.div>
               <span className="text-2xl md:text-3xl font-black text-white group-hover:text-primary-400 transition-colors uppercase tracking-tight whitespace-nowrap">

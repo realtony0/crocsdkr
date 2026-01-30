@@ -179,6 +179,7 @@ export default function HeroTab({ settings, onUpdate }: HeroTabProps) {
             Prévisualisation
           </label>
           <div className="relative aspect-video rounded-xl overflow-hidden bg-black">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={newBgFile ? URL.createObjectURL(newBgFile) : formData.backgroundImage}
               alt="Background"

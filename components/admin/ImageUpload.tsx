@@ -210,6 +210,7 @@ export default function ImageUpload({ onClose }: ImageUploadProps) {
                 <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
                   {files.map((file, index) => (
                     <div key={index} className="relative group aspect-square">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={URL.createObjectURL(file)}
                         alt={`Preview ${index + 1}`}
@@ -263,6 +264,7 @@ export default function ImageUpload({ onClose }: ImageUploadProps) {
               <div className="grid grid-cols-4 md:grid-cols-6 gap-3 max-h-64 overflow-y-auto">
                 {filteredImages.map((image, index) => (
                   <div key={index} className="relative group aspect-square">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={image}
                       alt={`Image ${index + 1}`}

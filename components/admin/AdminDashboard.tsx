@@ -14,6 +14,7 @@ import WhyUsTab from './tabs/WhyUsTab';
 import CategoriesTab from './tabs/CategoriesTab';
 import SettingsTab from './tabs/SettingsTab';
 import OrdersTab from './tabs/OrdersTab';
+import EnablePushBanner from './EnablePushBanner';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -112,6 +113,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <EnablePushBanner />
         {/* Stats rapides */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white p-4 rounded-xl shadow-sm">

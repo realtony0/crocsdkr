@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import AdminLogin from '@/components/admin/AdminLogin';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 
-const SECRET_PATH = '/amdycrcwst';
-
 interface AdminPageClientProps {
   urlCode: string;
+}
+
+function getAdminPath(urlCode: string) {
+  return urlCode === 'admin' ? '/admin' : '/amdycrcwst';
 }
 
 export default function AdminPageClient({ urlCode }: AdminPageClientProps) {
@@ -35,8 +37,13 @@ export default function AdminPageClient({ urlCode }: AdminPageClientProps) {
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('admin_authenticated');
+    const path = getAdminPath(urlCode);
     const code = sessionStorage.getItem('admin_url_code') || urlCode;
-    router.push(`${SECRET_PATH}?k=${encodeURIComponent(code)}`);
+    if (urlCode === 'admin') {
+      router.push(path);
+    } else {
+      router.push(`${path}?k=${encodeURIComponent(code)}`);
+    }
   };
 
   if (isLoading) {

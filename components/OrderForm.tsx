@@ -68,6 +68,8 @@ export default function OrderForm({ product, selectedSize, onClose, onSuccess }:
 
       onSuccess();
       onClose();
+      const orderId = data.orderId || '';
+      window.location.href = orderId ? `/commande-confirmee?id=${encodeURIComponent(orderId)}` : '/commande-confirmee';
     } catch (err) {
       setError('Erreur de connexion. Réessayez.');
       setIsSubmitting(false);

@@ -147,7 +147,7 @@ export default function ProductPage({ params }: PageProps) {
                 product={product}
                 selectedSize={selectedSize}
                 onClose={() => setShowOrderForm(false)}
-                onSuccess={() => alert('Commande enregistrée. Nous vous contacterons pour confirmer.')}
+                onSuccess={() => {}}
               />
             )}
 

@@ -1,25 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 import { sendPushToAll } from '@/lib/send-push';
-
-const ORDERS_FILE = path.join(process.cwd(), 'lib', 'orders.json');
-
-function getOrders() {
-  try {
-    const data = fs.readFileSync(ORDERS_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-}
-
-function saveOrders(orders: any[]) {
-  fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
-}
+import { getOrders, addOrder } from '@/lib/orders-db';
 
 export async function GET() {
-  const orders = getOrders();
+  const orders = await getOrders();
   return NextResponse.json(orders);
 }
 
@@ -50,7 +34,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const orders = getOrders();
     let newOrder: any;
 
     if (cartItems && Array.isArray(cartItems) && cartItems.length > 0) {
@@ -116,8 +99,7 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    orders.unshift(newOrder);
-    saveOrders(orders);
+    await addOrder(newOrder);
 
     const total = newOrder.totalPrice ?? newOrder.product?.totalPrice ?? 0;
     const summary = newOrder.items
@@ -131,6 +113,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, orderId: newOrder.id });
   } catch (error) {
     console.error('Erreur:', error);
-    return NextResponse.json({ error: 'Erreur lors de l\'enregistrement de la commande' }, { status: 500 });
+    const message =
+      error instanceof Error ? error.message : "Erreur lors de l'enregistrement de la commande";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
