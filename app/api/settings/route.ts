@@ -46,7 +46,11 @@ export async function PUT(request: NextRequest) {
     }
 
     if (section) {
-      settings[section] = data;
+      if (section === 'admin' && typeof data === 'object' && settings.admin) {
+        settings.admin = { ...settings.admin, ...data };
+      } else {
+        settings[section] = data;
+      }
     } else {
       Object.assign(settings, data);
     }

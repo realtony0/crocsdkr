@@ -91,7 +91,8 @@
     }
   ],
   "admin": {
-    "password": "crcsndkr221"
+    "password": "crcsndkr221",
+    "urlCode": "amdycrcwst"
   },
   "maintenance": {
     "enabled": false,

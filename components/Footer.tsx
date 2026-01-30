@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { MapPin, Phone, Instagram } from 'lucide-react';
+import { MapPin, Phone, Instagram, Smartphone } from 'lucide-react';
 import { getContactSettings, getStoreSettings } from '@/lib/settings';
 
 export default function Footer() {
@@ -29,6 +29,10 @@ export default function Footer() {
             </p>
             <p className="text-sm text-gray-500">
               {store.description}
+            </p>
+            <p className="text-xs text-gray-500 mt-3 flex items-center gap-2">
+              <Smartphone className="h-4 w-4" />
+              Sur mobile : menu du navigateur → &quot;Ajouter à l&apos;écran d&apos;accueil&quot; pour installer l&apos;app.
             </p>
           </div>
 
@@ -93,8 +97,19 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-gray-800 text-center text-sm text-gray-500">
+        <div className="mt-8 pt-8 border-t border-gray-800 text-center text-sm text-gray-500 space-y-1">
           <p>© {currentYear} {store.name}. Tous droits réservés.</p>
+          <p>
+            Site conçu par{' '}
+            <a
+              href="https://wa.me/221774992742"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary-400 hover:text-primary-300 transition-colors"
+            >
+              Mmb
+            </a>
+          </p>
         </div>
       </div>
     </footer>

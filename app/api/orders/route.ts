@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { sendPushToAll } from '@/lib/send-push';
 
 const ORDERS_FILE = path.join(process.cwd(), 'lib', 'orders.json');
 
@@ -117,6 +118,15 @@ export async function POST(request: NextRequest) {
 
     orders.unshift(newOrder);
     saveOrders(orders);
+
+    const total = newOrder.totalPrice ?? newOrder.product?.totalPrice ?? 0;
+    const summary = newOrder.items
+      ? `${newOrder.items.length} article(s) • ${total.toLocaleString('fr-FR')} FCFA`
+      : `${newOrder.product?.name} • ${total.toLocaleString('fr-FR')} FCFA`;
+    await sendPushToAll(
+      'Nouvelle commande Crocsdkr',
+      `${newOrder.customer.firstName} ${newOrder.customer.lastName} — ${summary}`
+    ).catch(() => {});
 
     return NextResponse.json({ success: true, orderId: newOrder.id });
   } catch (error) {
