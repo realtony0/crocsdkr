@@ -54,25 +54,19 @@ function createProductSlug(productName: string, colorName: string): string {
   return `${productSlug}-${colorSlug}`;
 }
 
-export function getAllProducts(): Product[] {
+export function getAllProductsFromData(data: any): Product[] {
+  if (!data || typeof data !== 'object') return [];
   const products: Product[] = [];
-  const data = productsData as any;
-  
   for (const [productName, baseConfig] of Object.entries(BASE_PRODUCTS)) {
     const productImages = data[productName];
     if (!productImages || typeof productImages !== 'object') continue;
-    
     const base = baseConfig as typeof BASE_PRODUCTS['Crocs Classic'];
-    
     for (const [colorName, images] of Object.entries(productImages)) {
       if (!Array.isArray(images) || images.length === 0) continue;
       const originalColor = colorName as string;
       const displayColor = COLOR_LABELS[originalColor] ?? originalColor;
-
-      // On garde la couleur originale pour le slug afin de ne pas casser les URLs
       const slug = createProductSlug(productName, originalColor);
       const fullName = `${productName} ${displayColor}`;
-      
       products.push({
         id: slug,
         name: fullName,
@@ -86,12 +80,27 @@ export function getAllProducts(): Product[] {
       });
     }
   }
-  
   return products.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function getAllProducts(): Product[] {
+  return getAllProductsFromData(productsData as any);
 }
 
 export function getProductBySlug(slug: string): Product | undefined {
   return getAllProducts().find(p => p.slug === slug);
+}
+
+export function getProductBySlugFromData(data: any, slug: string): Product | undefined {
+  return getAllProductsFromData(data).find(p => p.slug === slug);
+}
+
+export function getBapeProductsFromData(data: any): Product[] {
+  return getAllProductsFromData(data).filter(p => p.category === 'collaboration');
+}
+
+export function getClassicProductsFromData(data: any): Product[] {
+  return getAllProductsFromData(data).filter(p => p.category === 'classic');
 }
 
 export function getAllColors(): string[] {

@@ -1,15 +1,40 @@
 'use client';
 
-import { getBapeProducts, getClassicProducts } from '@/lib/products';
+import { useState, useEffect } from 'react';
+import { getBapeProductsFromData, getClassicProductsFromData } from '@/lib/products';
 import ProductCard from '@/components/ProductCard';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 export default function BoutiquePage() {
-  const bapeProducts = getBapeProducts();
-  const classicProducts = getClassicProducts();
+  const [bapeProducts, setBapeProducts] = useState<ReturnType<typeof getBapeProductsFromData>>([]);
+  const [classicProducts, setClassicProducts] = useState<ReturnType<typeof getClassicProductsFromData>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/products')
+      .then((res) => res.json())
+      .then((data) => {
+        setBapeProducts(getBapeProductsFromData(data));
+        setClassicProducts(getClassicProductsFromData(data));
+      })
+      .catch(() => {
+        setBapeProducts([]);
+        setClassicProducts([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
   const totalProducts = bapeProducts.length + classicProducts.length;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">

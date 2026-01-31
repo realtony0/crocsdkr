@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { notFound } from 'next/navigation';
-import { getProductBySlug, Product } from '@/lib/products';
+import { getProductBySlugFromData, Product } from '@/lib/products';
 import ImageCarousel from '@/components/ImageCarousel';
 import OrderForm from '@/components/OrderForm';
 import { useCart } from '@/context/CartContext';
@@ -25,8 +25,12 @@ export default function ProductPage({ params }: PageProps) {
 
   useEffect(() => {
     setMounted(true);
-    const foundProduct = getProductBySlug(params.slug);
-    setProduct(foundProduct);
+    fetch('/api/products')
+      .then((res) => res.json())
+      .then((data) => {
+        setProduct(getProductBySlugFromData(data, params.slug));
+      })
+      .catch(() => setProduct(undefined));
   }, [params.slug]);
 
   if (!mounted) {

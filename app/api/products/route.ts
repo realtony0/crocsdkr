@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const PRODUCTS_FILE = path.join(process.cwd(), 'lib', 'products-data.json');
-const BASE_PRODUCTS_FILE = path.join(process.cwd(), 'lib', 'base-products.json');
+import { getProductsAsync, saveProductsAsync } from '@/lib/products-db';
 
 // GET - Récupérer tous les produits
 export async function GET() {
   try {
-    const data = fs.readFileSync(PRODUCTS_FILE, 'utf-8');
-    return NextResponse.json(JSON.parse(data));
+    const data = await getProductsAsync();
+    if (!data) {
+      return NextResponse.json({ error: 'Erreur lors de la lecture des produits' }, { status: 500 });
+    }
+    return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json({ error: 'Erreur lors de la lecture des produits' }, { status: 500 });
   }
@@ -21,21 +20,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { productType, color, images, price, description, sizes } = body;
 
-    // Lire les données actuelles
-    const data = JSON.parse(fs.readFileSync(PRODUCTS_FILE, 'utf-8'));
+    const data = await getProductsAsync();
+    if (!data) {
+      return NextResponse.json({ error: 'Erreur lors de la lecture des produits' }, { status: 500 });
+    }
 
-    // Ajouter ou mettre à jour le produit
     if (!data[productType]) {
       data[productType] = {};
     }
-
     data[productType][color] = images;
 
-    // Sauvegarder
-    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(data, null, 2));
-
-    // Mettre à jour les prix si nécessaire
-    await updateBaseProducts(productType, price, description, sizes);
+    await saveProductsAsync(data);
 
     return NextResponse.json({ success: true, message: 'Produit ajouté avec succès' });
   } catch (error) {
@@ -50,23 +45,21 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { productType, oldColor, newColor, images, price, description, sizes } = body;
 
-    const data = JSON.parse(fs.readFileSync(PRODUCTS_FILE, 'utf-8'));
+    const data = await getProductsAsync();
+    if (!data) {
+      return NextResponse.json({ error: 'Erreur lors de la lecture des produits' }, { status: 500 });
+    }
 
-    // Si la couleur a changé, supprimer l'ancienne
     if (oldColor && oldColor !== newColor && data[productType]?.[oldColor]) {
       delete data[productType][oldColor];
     }
 
-    // Mettre à jour avec la nouvelle couleur
     if (!data[productType]) {
       data[productType] = {};
     }
     data[productType][newColor] = images;
 
-    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(data, null, 2));
-
-    // Mettre à jour les prix
-    await updateBaseProducts(productType, price, description, sizes);
+    await saveProductsAsync(data);
 
     return NextResponse.json({ success: true, message: 'Produit modifié avec succès' });
   } catch (error) {
@@ -86,17 +79,17 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 });
     }
 
-    const data = JSON.parse(fs.readFileSync(PRODUCTS_FILE, 'utf-8'));
+    const data = await getProductsAsync();
+    if (!data) {
+      return NextResponse.json({ error: 'Erreur lors de la lecture des produits' }, { status: 500 });
+    }
 
     if (data[productType]?.[color]) {
       delete data[productType][color];
-      
-      // Si plus aucune couleur, supprimer le type de produit
       if (Object.keys(data[productType]).length === 0) {
         delete data[productType];
       }
-
-      fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(data, null, 2));
+      await saveProductsAsync(data);
     }
 
     return NextResponse.json({ success: true, message: 'Produit supprimé avec succès' });
@@ -104,10 +97,4 @@ export async function DELETE(request: NextRequest) {
     console.error('Erreur:', error);
     return NextResponse.json({ error: 'Erreur lors de la suppression du produit' }, { status: 500 });
   }
-}
-
-async function updateBaseProducts(productType: string, price: number, description: string, sizes: number[]) {
-  // Cette fonction pourrait mettre à jour un fichier de configuration des prix
-  // Pour l'instant, les prix sont codés en dur dans lib/products.ts
-  // On pourrait les externaliser si nécessaire
 }

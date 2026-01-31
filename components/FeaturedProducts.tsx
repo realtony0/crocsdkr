@@ -1,12 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { getAllProducts } from '@/lib/products';
+import { getAllProducts, Product } from '@/lib/products';
 import ProductCard from './ProductCard';
 import { ArrowRight } from 'lucide-react';
 
-export default function FeaturedProducts() {
-  const products = getAllProducts().slice(0, 6);
+export interface FeaturedProductsProps {
+  products?: Product[];
+}
+
+export default function FeaturedProducts({ products: productsProp }: FeaturedProductsProps) {
+  const products = productsProp ?? getAllProducts().slice(0, 6);
 
   return (
     <section className="py-20 bg-white">

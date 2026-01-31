@@ -1,22 +1,32 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
-import { getProductBySlug } from '@/lib/products';
+import { getProductBySlugFromData, getProductBySlug } from '@/lib/products';
 import CartCheckoutForm, { CartLineItem } from '@/components/CartCheckoutForm';
 import { ShoppingCart, Trash2, Minus, Plus, ArrowRight } from 'lucide-react';
 
 export default function PanierPage() {
   const { items, removeFromCart, updateQuantity, clearCart } = useCart();
   const [showCheckout, setShowCheckout] = useState(false);
+  const [productsData, setProductsData] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('/api/products')
+      .then((res) => res.json())
+      .then(setProductsData)
+      .catch(() => setProductsData({}));
+  }, []);
 
   const { lineItems, totalPrice } = useMemo(() => {
     const lines: CartLineItem[] = [];
     let total = 0;
     for (const item of items) {
-      const product = getProductBySlug(item.slug);
+      const product = productsData
+        ? getProductBySlugFromData(productsData, item.slug)
+        : getProductBySlug(item.slug);
       if (!product) continue;
       const price = product.basePrice * item.quantity;
       total += price;
@@ -30,7 +40,7 @@ export default function PanierPage() {
       });
     }
     return { lineItems: lines, totalPrice: total };
-  }, [items]);
+  }, [items, productsData]);
 
   if (items.length === 0 && !showCheckout) {
     return (
@@ -56,7 +66,9 @@ export default function PanierPage() {
       <div className="space-y-4 mb-8">
         {lineItems.map((line) => {
           const cartItem = items.find((i) => i.slug === line.slug && i.size === line.size);
-          const product = getProductBySlug(line.slug);
+          const product = productsData
+            ? getProductBySlugFromData(productsData, line.slug)
+            : getProductBySlug(line.slug);
           if (!product || !cartItem) return null;
           const image = product.images?.[0];
 
