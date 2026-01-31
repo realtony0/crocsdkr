@@ -1,12 +1,24 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 import { getHeroSettings } from '@/lib/settings';
 
 export default function Hero() {
-  const settings = getHeroSettings();
+  const [settings, setSettings] = useState(getHeroSettings());
+
+  useEffect(() => {
+    fetch('/api/settings?section=hero')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && typeof data === 'object' && data.title1) {
+          setSettings(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">

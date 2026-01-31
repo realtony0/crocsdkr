@@ -8,6 +8,7 @@ const nextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 7,
     remotePatterns: [
       { protocol: 'https', hostname: '**.blob.vercel-storage.com', pathname: '/**' },
+      { protocol: 'https', hostname: '**.supabase.co', pathname: '/storage/**' },
     ],
   },
 }

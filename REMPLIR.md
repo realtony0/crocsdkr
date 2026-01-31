@@ -11,10 +11,11 @@ Sur Vercel le site ne peut pas écrire dans un fichier. Il faut une base en lign
 1. Va sur [supabase.com](https://supabase.com) → crée un compte (gratuit) → **New Project**.
 2. Dans le projet : **Settings** → **API** → note **Project URL** et **service_role** (Secret key).
 3. **SQL Editor** → New query → ouvre le fichier `SUPABASE_SETUP.sql` à la racine du repo → copie son contenu → Run. (Crée les tables.)
-4. Sur **Vercel** → ton projet → **Settings** → **Environment Variables** → ajoute :
+4. **Storage** (menu à gauche) → **New bucket** → Nom : `images` → coche **Public bucket** → Create. (Pour les images produits.)
+5. Sur **Vercel** → ton projet → **Settings** → **Environment Variables** → ajoute :
    - **Name** : `SUPABASE_URL` — **Value** : Project URL.
    - **Name** : `SUPABASE_SERVICE_ROLE_KEY` — **Value** : service_role key (Secret).
-5. Redéploie. Commandes, paramètres admin et produits seront enregistrés dans Supabase.
+6. Redéploie. Commandes, paramètres, produits et images seront enregistrés dans Supabase.
 
 En local, sans ces variables, le site utilise les fichiers (`lib/orders.json`, `lib/site-settings.json`, `lib/products-data.json`).
 

@@ -1,10 +1,22 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
 import { getTestimonials } from '@/lib/settings';
 
 export default function Testimonials() {
-  const testimonials = getTestimonials();
+  const [testimonials, setTestimonials] = useState<any[]>(getTestimonials());
+
+  useEffect(() => {
+    fetch('/api/settings?section=testimonials')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setTestimonials(data.filter((t: any) => t.active));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   if (testimonials.length === 0) return null;
 

@@ -20,3 +20,10 @@ CREATE TABLE IF NOT EXISTS crocsdkr_products (
 
 -- Optionnel : autoriser les accès pour le service role (déjà fait par défaut)
 -- RLS peut rester désactivé ou activé selon tes besoins.
+
+-- IMPORTANT : Créer aussi un bucket Storage pour les images
+-- 1. Va dans Supabase → Storage (menu à gauche)
+-- 2. Clique "New bucket"
+-- 3. Nom : images
+-- 4. Coche "Public bucket"
+-- 5. Clique "Create bucket"

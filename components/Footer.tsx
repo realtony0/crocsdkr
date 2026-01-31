@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin, Phone, Instagram, Smartphone } from 'lucide-react';
@@ -7,8 +8,18 @@ import { getContactSettings, getStoreSettings } from '@/lib/settings';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
-  const contact = getContactSettings();
-  const store = getStoreSettings();
+  const [contact, setContact] = useState(getContactSettings());
+  const [store, setStore] = useState(getStoreSettings());
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.contact) setContact(data.contact);
+        if (data?.store) setStore(data.store);
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <footer className="bg-gray-900 text-gray-300">

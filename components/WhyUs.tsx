@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Shield, Truck, Award, Heart, Star, Zap } from 'lucide-react';
 import { getWhyUs } from '@/lib/settings';
 
@@ -13,7 +14,18 @@ const ICONS: Record<string, any> = {
 };
 
 export default function WhyUs() {
-  const features = getWhyUs();
+  const [features, setFeatures] = useState<any[]>(getWhyUs());
+
+  useEffect(() => {
+    fetch('/api/settings?section=whyUs')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setFeatures(data.filter((w: any) => w.active));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   if (features.length === 0) return null;
 

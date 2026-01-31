@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { put } from '@vercel/blob';
+import { getSupabase } from '@/lib/supabase';
 import fs from 'fs';
 import path from 'path';
+
+const BUCKET_NAME = 'images';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,18 +17,31 @@ export async function POST(request: NextRequest) {
     }
 
     const uploadedPaths: string[] = [];
-    const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
+    const supabase = getSupabase();
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const ext = path.extname(file.name) || '.jpeg';
-      const cleanProductName = productName.toLowerCase().replace(/[^a-z0-9]/g, ' ').trim();
-      const cleanColor = color.toLowerCase().replace(/[^a-z0-9]/g, ' ').trim();
-      const fileName = `${cleanProductName} ${cleanColor} ${i + 1}${ext}`;
+      const cleanProductName = productName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').trim();
+      const cleanColor = color.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').trim();
+      const fileName = `${cleanProductName}-${cleanColor}-${Date.now()}-${i + 1}${ext}`;
 
-      if (useBlob) {
-        const blob = await put(`images/${Date.now()}-${fileName}`, file, { access: 'public' });
-        uploadedPaths.push(blob.url);
+      if (supabase) {
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const { data, error } = await supabase.storage
+          .from(BUCKET_NAME)
+          .upload(fileName, buffer, {
+            contentType: file.type || 'image/jpeg',
+            upsert: true,
+          });
+
+        if (error) {
+          console.error('Supabase upload error:', error);
+          throw error;
+        }
+
+        const { data: urlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
+        uploadedPaths.push(urlData.publicUrl);
       } else {
         const imagesDir = path.join(process.cwd(), 'public', 'images');
         if (!fs.existsSync(imagesDir)) {
@@ -34,9 +49,10 @@ export async function POST(request: NextRequest) {
         }
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
-        const filePath = path.join(imagesDir, fileName);
+        const localFileName = `${cleanProductName} ${cleanColor} ${i + 1}${ext}`;
+        const filePath = path.join(imagesDir, localFileName);
         fs.writeFileSync(filePath, buffer);
-        uploadedPaths.push(`/images/${fileName}`);
+        uploadedPaths.push(`/images/${localFileName}`);
       }
     }
 
