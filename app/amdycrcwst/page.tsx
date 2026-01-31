@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getSettings } from '@/lib/settings';
+import { getSettingsAsync } from '@/lib/settings-db';
 import AdminPageClient from '@/components/admin/AdminPageClient';
 
 export const metadata = {
@@ -15,8 +15,8 @@ interface PageProps {
 
 export default async function AdminSecretPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const settings = getSettings();
-  const urlCode = settings.admin?.urlCode || '';
+  const settings = await getSettingsAsync();
+  const urlCode = settings?.admin?.urlCode || '';
 
   if (!params.k || params.k !== urlCode) {
     notFound();

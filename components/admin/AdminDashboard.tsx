@@ -5,7 +5,7 @@ import {
   LogOut, Package, Settings, MessageSquare, Award, 
   Layers, Home, Shield, RefreshCw, ShoppingBag
 } from 'lucide-react';
-import { getAllProducts, Product } from '@/lib/products';
+import { getAllProductsFromData, Product } from '@/lib/products';
 import ProductsTab from './tabs/ProductsTab';
 import HeroTab from './tabs/HeroTab';
 import ContactTab from './tabs/ContactTab';
@@ -46,11 +46,13 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      // Charger les produits
-      const allProducts = getAllProducts();
+      // Charger les produits depuis l'API (Supabase)
+      const productsRes = await fetch('/api/products');
+      const productsData = await productsRes.json();
+      const allProducts = getAllProductsFromData(productsData);
       setProducts(allProducts);
 
-      // Charger les paramètres
+      // Charger les paramètres depuis l'API (Supabase)
       const response = await fetch('/api/settings');
       const settingsData = await response.json();
       setSettings(settingsData);

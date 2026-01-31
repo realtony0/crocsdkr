@@ -1,7 +1,8 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getAllProducts, Product } from '@/lib/products';
+import { getAllProductsFromData, Product } from '@/lib/products';
 import ProductCard from './ProductCard';
 import { ArrowRight } from 'lucide-react';
 
@@ -10,7 +11,16 @@ export interface FeaturedProductsProps {
 }
 
 export default function FeaturedProducts({ products: productsProp }: FeaturedProductsProps) {
-  const products = productsProp ?? getAllProducts().slice(0, 6);
+  const [products, setProducts] = useState<Product[]>(productsProp ?? []);
+
+  useEffect(() => {
+    if (!productsProp) {
+      fetch('/api/products')
+        .then((res) => res.json())
+        .then((data) => setProducts(getAllProductsFromData(data).slice(0, 6)))
+        .catch(() => setProducts([]));
+    }
+  }, [productsProp]);
 
   return (
     <section className="py-20 bg-white">
