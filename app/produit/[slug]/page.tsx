@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { notFound } from 'next/navigation';
-import { getProductBySlugFromData, Product } from '@/lib/products';
+import { getProductBySlugFromData, getProductBySlug, Product } from '@/lib/products';
 import ImageCarousel from '@/components/ImageCarousel';
 import OrderForm from '@/components/OrderForm';
 import { useCart } from '@/context/CartContext';
@@ -17,23 +17,25 @@ interface PageProps {
 
 export default function ProductPage({ params }: PageProps) {
   const [product, setProduct] = useState<Product | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const { addToCart } = useCart();
 
   useEffect(() => {
-    setMounted(true);
+    setLoading(true);
     fetch('/api/products')
       .then((res) => res.json())
       .then((data) => {
-        setProduct(getProductBySlugFromData(data, params.slug));
+        const p = getProductBySlugFromData(data, params.slug);
+        setProduct(p ?? getProductBySlug(params.slug));
       })
-      .catch(() => setProduct(undefined));
+      .catch(() => setProduct(getProductBySlug(params.slug)))
+      .finally(() => setLoading(false));
   }, [params.slug]);
 
-  if (!mounted) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
