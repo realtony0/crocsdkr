@@ -1,18 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { neon } from '@neondatabase/serverless';
+import { getSupabase } from './supabase';
 
 const ORDERS_FILE = path.join(process.cwd(), 'lib', 'orders.json');
-
-async function ensureTable(sql: any) {
-  await sql`
-    CREATE TABLE IF NOT EXISTS crocsdkr_orders (
-      id TEXT PRIMARY KEY,
-      created_at TIMESTAMPTZ NOT NULL,
-      payload JSONB NOT NULL
-    )
-  `;
-}
 
 function getOrdersFromFile(): any[] {
   try {
@@ -31,19 +21,21 @@ function addOrderToFile(order: any): void {
 }
 
 export async function getOrders(): Promise<any[]> {
-  const url = process.env.DATABASE_URL;
-  if (url) {
+  const supabase = getSupabase();
+  if (supabase) {
     try {
-      const sql = neon(url);
-      await ensureTable(sql);
-      const rows = await sql`SELECT id, created_at, payload FROM crocsdkr_orders ORDER BY created_at DESC`;
-      return rows.map((r: any) => ({
+      const { data: rows, error } = await supabase
+        .from('crocsdkr_orders')
+        .select('id, created_at, payload')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (rows ?? []).map((r: any) => ({
         id: r.id,
         createdAt: r.created_at,
         ...r.payload,
       }));
     } catch (e) {
-      console.error('Neon getOrders:', e);
+      console.error('Supabase getOrders:', e);
       return [];
     }
   }
@@ -51,16 +43,21 @@ export async function getOrders(): Promise<any[]> {
 }
 
 export async function addOrder(order: any): Promise<void> {
-  const url = process.env.DATABASE_URL;
-  if (url) {
-    const sql = neon(url);
-    await ensureTable(sql);
-    const { id, createdAt, ...payload } = order;
-    await sql`
-      INSERT INTO crocsdkr_orders (id, created_at, payload)
-      VALUES (${id}, ${createdAt}, ${JSON.stringify(payload)}::jsonb)
-    `;
-    return;
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { id, createdAt, ...payload } = order;
+      const { error } = await supabase.from('crocsdkr_orders').insert({
+        id,
+        created_at: createdAt,
+        payload,
+      });
+      if (error) throw error;
+      return;
+    } catch (e) {
+      console.error('Supabase addOrder:', e);
+      throw e;
+    }
   }
   addOrderToFile(order);
 }

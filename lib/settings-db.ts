@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { neon } from '@neondatabase/serverless';
+import { getSupabase } from './supabase';
 
 const SETTINGS_FILE = path.join(process.cwd(), 'lib', 'site-settings.json');
 const SETTINGS_KEY = 'site';
@@ -18,52 +18,41 @@ function saveSettingsToFile(settings: any): void {
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2));
 }
 
-async function ensureSettingsTable(sql: any) {
-  await sql`
-    CREATE TABLE IF NOT EXISTS crocsdkr_settings (
-      key TEXT PRIMARY KEY,
-      value JSONB NOT NULL,
-      updated_at TIMESTAMPTZ DEFAULT NOW()
-    )
-  `;
-}
-
 export async function getSettingsAsync(): Promise<any> {
-  const url = process.env.DATABASE_URL;
-  if (url) {
+  const supabase = getSupabase();
+  if (supabase) {
     try {
-      const sql = neon(url);
-      await ensureSettingsTable(sql);
-      const rows = await sql`SELECT value FROM crocsdkr_settings WHERE key = ${SETTINGS_KEY}`;
-      if (rows.length > 0 && rows[0].value) {
-        return rows[0].value as any;
-      }
+      const { data: rows, error } = await supabase
+        .from('crocsdkr_settings')
+        .select('value')
+        .eq('key', SETTINGS_KEY)
+        .maybeSingle();
+      if (error) throw error;
+      if (rows?.value) return rows.value as any;
       const fileSettings = getSettingsFromFile();
       if (fileSettings) {
         await saveSettingsAsync(fileSettings);
         return fileSettings;
       }
     } catch (e) {
-      console.error('Neon getSettings:', e);
+      console.error('Supabase getSettings:', e);
     }
   }
   return getSettingsFromFile();
 }
 
 export async function saveSettingsAsync(settings: any): Promise<void> {
-  const url = process.env.DATABASE_URL;
-  if (url) {
+  const supabase = getSupabase();
+  if (supabase) {
     try {
-      const sql = neon(url);
-      await ensureSettingsTable(sql);
-      await sql`
-        INSERT INTO crocsdkr_settings (key, value, updated_at)
-        VALUES (${SETTINGS_KEY}, ${JSON.stringify(settings)}::jsonb, NOW())
-        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
-      `;
+      const { error } = await supabase.from('crocsdkr_settings').upsert(
+        { key: SETTINGS_KEY, value: settings, updated_at: new Date().toISOString() },
+        { onConflict: 'key' }
+      );
+      if (error) throw error;
       return;
     } catch (e) {
-      console.error('Neon saveSettings:', e);
+      console.error('Supabase saveSettings:', e);
     }
   }
   saveSettingsToFile(settings);

@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { neon } from '@neondatabase/serverless';
+import { getSupabase } from './supabase';
 
 const PRODUCTS_FILE = path.join(process.cwd(), 'lib', 'products-data.json');
 const PRODUCTS_KEY = 'data';
@@ -18,52 +18,41 @@ function saveProductsToFile(data: any): void {
   fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(data, null, 2));
 }
 
-async function ensureProductsTable(sql: any) {
-  await sql`
-    CREATE TABLE IF NOT EXISTS crocsdkr_products (
-      key TEXT PRIMARY KEY,
-      value JSONB NOT NULL,
-      updated_at TIMESTAMPTZ DEFAULT NOW()
-    )
-  `;
-}
-
 export async function getProductsAsync(): Promise<any> {
-  const url = process.env.DATABASE_URL;
-  if (url) {
+  const supabase = getSupabase();
+  if (supabase) {
     try {
-      const sql = neon(url);
-      await ensureProductsTable(sql);
-      const rows = await sql`SELECT value FROM crocsdkr_products WHERE key = ${PRODUCTS_KEY}`;
-      if (rows.length > 0 && rows[0].value) {
-        return rows[0].value as any;
-      }
+      const { data: rows, error } = await supabase
+        .from('crocsdkr_products')
+        .select('value')
+        .eq('key', PRODUCTS_KEY)
+        .maybeSingle();
+      if (error) throw error;
+      if (rows?.value) return rows.value as any;
       const fileData = getProductsFromFile();
       if (fileData) {
         await saveProductsAsync(fileData);
         return fileData;
       }
     } catch (e) {
-      console.error('Neon getProducts:', e);
+      console.error('Supabase getProducts:', e);
     }
   }
   return getProductsFromFile();
 }
 
 export async function saveProductsAsync(data: any): Promise<void> {
-  const url = process.env.DATABASE_URL;
-  if (url) {
+  const supabase = getSupabase();
+  if (supabase) {
     try {
-      const sql = neon(url);
-      await ensureProductsTable(sql);
-      await sql`
-        INSERT INTO crocsdkr_products (key, value, updated_at)
-        VALUES (${PRODUCTS_KEY}, ${JSON.stringify(data)}::jsonb, NOW())
-        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
-      `;
+      const { error } = await supabase.from('crocsdkr_products').upsert(
+        { key: PRODUCTS_KEY, value: data, updated_at: new Date().toISOString() },
+        { onConflict: 'key' }
+      );
+      if (error) throw error;
       return;
     } catch (e) {
-      console.error('Neon saveProducts:', e);
+      console.error('Supabase saveProducts:', e);
     }
   }
   saveProductsToFile(data);

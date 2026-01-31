@@ -11,7 +11,7 @@
     "vapid": "node scripts/generate-vapid.js"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.2",
+    "@supabase/supabase-js": "^2.93.3",
     "@vercel/blob": "^2.0.1",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.344.0",
