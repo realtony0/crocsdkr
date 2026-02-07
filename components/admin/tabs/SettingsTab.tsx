@@ -78,7 +78,7 @@ export default function SettingsTab({ admin, maintenance, onUpdate, onLogout }: 
         applicationServerKey: urlBase64ToUint8Array(publicKey) as BufferSource,
       });
       const subJson = sub.toJSON();
-      await fetch('/api/push-subscribe', {
+      const subRes = await fetch('/api/push-subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -86,6 +86,12 @@ export default function SettingsTab({ admin, maintenance, onUpdate, onLogout }: 
           keys: subJson.keys,
         }),
       });
+      if (!subRes.ok) {
+        const err = await subRes.json().catch(() => ({}));
+        setPushError(err?.error || 'Erreur lors de l\'enregistrement des notifications.');
+        setPushStatus('error');
+        return;
+      }
       setPushStatus('ok');
     } catch (err: any) {
       setPushError(err?.message || 'Erreur lors de l\'activation.');

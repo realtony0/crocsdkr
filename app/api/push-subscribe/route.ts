@@ -8,7 +8,10 @@ export async function POST(request: NextRequest) {
     if (!endpoint || !keys?.p256dh || !keys?.auth) {
       return NextResponse.json({ error: 'Invalid subscription' }, { status: 400 });
     }
-    addSubscription({ endpoint, keys });
+    const ok = await addSubscription({ endpoint, keys });
+    if (!ok) {
+      return NextResponse.json({ error: 'Failed to save subscription' }, { status: 500 });
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Push subscribe error:', error);

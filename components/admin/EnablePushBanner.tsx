@@ -53,11 +53,17 @@ export default function EnablePushBanner() {
         applicationServerKey: urlBase64ToUint8Array(publicKey) as BufferSource,
       });
       const subJson = sub.toJSON();
-      await fetch('/api/push-subscribe', {
+      const subRes = await fetch('/api/push-subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ endpoint: subJson.endpoint, keys: subJson.keys }),
       });
+      if (!subRes.ok) {
+        const err = await subRes.json().catch(() => ({}));
+        setError(err?.error || 'Erreur lors de l\'enregistrement des notifications.');
+        setLoading(false);
+        return;
+      }
       sessionStorage.setItem(BANNER_DISMISSED_KEY, '1');
       setShow(false);
     } catch (err: any) {

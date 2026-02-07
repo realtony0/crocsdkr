@@ -18,6 +18,12 @@ CREATE TABLE IF NOT EXISTS crocsdkr_products (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS crocsdkr_push_subscriptions (
+  endpoint TEXT PRIMARY KEY,
+  keys JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ============================================
 -- SÉCURITÉ : Activer RLS sur toutes les tables
 -- ============================================
@@ -25,6 +31,7 @@ CREATE TABLE IF NOT EXISTS crocsdkr_products (
 ALTER TABLE crocsdkr_orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE crocsdkr_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE crocsdkr_products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE crocsdkr_push_subscriptions ENABLE ROW LEVEL SECURITY;
 
 -- Policies pour crocsdkr_orders (seul le service_role peut tout faire)
 DROP POLICY IF EXISTS "Service role full access orders" ON crocsdkr_orders;
@@ -39,6 +46,11 @@ CREATE POLICY "Service role full access settings" ON crocsdkr_settings
 -- Policies pour crocsdkr_products (seul le service_role peut tout faire)
 DROP POLICY IF EXISTS "Service role full access products" ON crocsdkr_products;
 CREATE POLICY "Service role full access products" ON crocsdkr_products
+  FOR ALL USING (auth.role() = 'service_role');
+
+-- Policies pour crocsdkr_push_subscriptions (seul le service_role peut tout faire)
+DROP POLICY IF EXISTS "Service role full access push subscriptions" ON crocsdkr_push_subscriptions;
+CREATE POLICY "Service role full access push subscriptions" ON crocsdkr_push_subscriptions
   FOR ALL USING (auth.role() = 'service_role');
 
 -- ============================================
