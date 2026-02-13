@@ -68,7 +68,7 @@
       "id": "4",
       "icon": "Heart",
       "title": "Service client",
-      "description": "Disponible via WhatsApp.",
+      "description": "Disponible par message.",
       "active": true
     }
   ],

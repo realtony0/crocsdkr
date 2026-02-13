@@ -93,7 +93,7 @@ export default function AProposPage() {
               <Heart className="h-10 w-10 text-primary-600 mb-4" />
               <h3 className="text-xl font-bold text-gray-900 mb-3">Service</h3>
               <p className="text-gray-600">
-                Une équipe disponible et à l&apos;écoute via WhatsApp pour vous accompagner.
+                Une équipe disponible et à l&apos;écoute par message pour vous accompagner.
               </p>
             </div>
           </div>
@@ -124,7 +124,7 @@ export default function AProposPage() {
               <div className="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <Phone className="h-7 w-7 text-primary-600" />
               </div>
-              <h3 className="font-bold text-gray-900 mb-1">WhatsApp</h3>
+              <h3 className="font-bold text-gray-900 mb-1">Téléphone</h3>
               <p className="text-gray-600">+221 76 935 99 17</p>
             </div>
             <div className="text-center">

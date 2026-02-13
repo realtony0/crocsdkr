@@ -59,7 +59,7 @@ export default function Footer() {
                   className="flex items-center space-x-2 hover:text-primary-400 transition-colors group"
                 >
                   <Phone className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                  <span>WhatsApp</span>
+                  <span>Nous écrire</span>
                 </a>
               </li>
               <li>

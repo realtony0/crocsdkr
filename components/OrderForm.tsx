@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, ShoppingBag } from 'lucide-react';
 import { Product } from '@/lib/products';
+import { buildChatLink } from '@/lib/chat-link';
 
 interface OrderFormProps {
   product: Product;
@@ -27,6 +28,31 @@ export default function OrderForm({ product, selectedSize, onClose, onSuccess }:
   const totalPrice = product.basePrice;
   const priceFormatted = totalPrice.toLocaleString('fr-FR');
 
+  const fetchContactNumber = async (): Promise<string> => {
+    try {
+      const res = await fetch('/api/settings?section=contact');
+      const data = await res.json();
+      if (typeof data?.whatsapp === 'string') return data.whatsapp;
+    } catch (_) {}
+    return '';
+  };
+
+  const buildOrderMessage = (orderId: string) => {
+    const lines: string[] = [];
+    lines.push('Nouvelle commande');
+    if (orderId) lines.push(`ID: ${orderId}`);
+    lines.push(`Client: ${formData.firstName.trim()} ${formData.lastName.trim()}`.trim());
+    lines.push(`Tel: ${formData.phone.trim()}`);
+    if (formData.email.trim()) lines.push(`Email: ${formData.email.trim()}`);
+    lines.push(`Adresse: ${formData.address.trim()}, ${formData.city.trim()}`);
+    lines.push(`Produit: ${product.name}`);
+    lines.push(`Couleur: ${product.color}`);
+    lines.push(`Pointure: ${selectedSize ?? ''}`);
+    lines.push(`Total: ${priceFormatted} FCFA`);
+    if (formData.message.trim()) lines.push(`Message: ${formData.message.trim()}`);
+    return lines.join('\n');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSize) {
@@ -38,6 +64,7 @@ export default function OrderForm({ product, selectedSize, onClose, onSuccess }:
     setIsSubmitting(true);
 
     try {
+      const contactNumberPromise = fetchContactNumber();
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,18 +85,21 @@ export default function OrderForm({ product, selectedSize, onClose, onSuccess }:
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({} as any));
+      const orderId = response.ok ? (data?.orderId ?? '') : '';
+      const contactNumber = await contactNumberPromise;
 
-      if (!response.ok) {
-        setError(data.error || 'Une erreur est survenue.');
+      const msg = buildOrderMessage(orderId);
+      const link = buildChatLink(contactNumber, msg);
+      if (!link) {
+        setError('Numéro de contact indisponible. Réessayez plus tard.');
         setIsSubmitting(false);
         return;
       }
 
       onSuccess();
       onClose();
-      const orderId = data.orderId || '';
-      window.location.href = orderId ? `/commande-confirmee?id=${encodeURIComponent(orderId)}` : '/commande-confirmee';
+      window.location.href = link;
     } catch (err) {
       setError('Erreur de connexion. Réessayez.');
       setIsSubmitting(false);

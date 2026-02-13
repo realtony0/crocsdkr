@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, ShoppingBag } from 'lucide-react';
+import { buildChatLink } from '@/lib/chat-link';
 
 export interface CartLineItem {
   name: string;
@@ -32,12 +33,42 @@ export default function CartCheckoutForm({ items, totalPrice, onClose, onSuccess
     message: '',
   });
 
+  const fetchContactNumber = async (): Promise<string> => {
+    try {
+      const res = await fetch('/api/settings?section=contact');
+      const data = await res.json();
+      if (typeof data?.whatsapp === 'string') return data.whatsapp;
+    } catch (_) {}
+    return '';
+  };
+
+  const buildOrderMessage = (orderId: string) => {
+    const lines: string[] = [];
+    lines.push('Nouvelle commande');
+    if (orderId) lines.push(`ID: ${orderId}`);
+    lines.push(`Client: ${formData.firstName.trim()} ${formData.lastName.trim()}`.trim());
+    lines.push(`Tel: ${formData.phone.trim()}`);
+    if (formData.email.trim()) lines.push(`Email: ${formData.email.trim()}`);
+    lines.push(`Adresse: ${formData.address.trim()}, ${formData.city.trim()}`);
+    lines.push('Articles:');
+    for (const it of items) {
+      const lineTotal = (Number(it.price) || 0) * (Number(it.quantity) || 1);
+      lines.push(
+        `- ${it.name} • ${it.color} • Pt ${it.size} × ${it.quantity} — ${lineTotal.toLocaleString('fr-FR')} FCFA`
+      );
+    }
+    lines.push(`Total: ${totalPrice.toLocaleString('fr-FR')} FCFA`);
+    if (formData.message.trim()) lines.push(`Message: ${formData.message.trim()}`);
+    return lines.join('\n');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
 
     try {
+      const contactNumberPromise = fetchContactNumber();
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -60,18 +91,25 @@ export default function CartCheckoutForm({ items, totalPrice, onClose, onSuccess
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({} as any));
+      const orderId = response.ok ? (data?.orderId ?? '') : '';
+      const contactNumber = await contactNumberPromise;
 
-      if (!response.ok) {
-        setError(data.error || 'Une erreur est survenue.');
+      const msg = buildOrderMessage(orderId);
+      const link = buildChatLink(contactNumber, msg);
+      if (!link) {
+        setError('Numéro de contact indisponible. Réessayez plus tard.');
         setIsSubmitting(false);
         return;
       }
 
+      try {
+        localStorage.setItem('crocsdkr_cart', JSON.stringify([]));
+      } catch (_) {}
+
       onSuccess();
       onClose();
-      const orderId = data.orderId || '';
-      window.location.href = orderId ? `/commande-confirmee?id=${encodeURIComponent(orderId)}` : '/commande-confirmee';
+      window.location.href = link;
     } catch (err) {
       setError('Erreur de connexion. Réessayez.');
       setIsSubmitting(false);

@@ -73,7 +73,7 @@ export default function ContactTab({ settings, store, onUpdate }: ContactTabProp
             <div>
               <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2">
                 <Phone className="h-4 w-4" />
-                WhatsApp (sans le +)
+                Numéro de contact (sans le +)
               </label>
               <input
                 type="text"

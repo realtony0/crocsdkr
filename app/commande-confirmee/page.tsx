@@ -33,14 +33,14 @@ export default async function CommandeConfirmeePage({
             Vous serez contacté(e) très prochainement
           </p>
           <p className="text-gray-600 text-sm leading-relaxed">
-            Notre équipe vous contactera par téléphone ou WhatsApp pour confirmer les détails de votre commande et convenir du créneau de livraison à Dakar.
+            Notre équipe vous contactera par téléphone ou par message pour confirmer les détails de votre commande et convenir du créneau de livraison à Dakar.
           </p>
           <p className="text-gray-600 text-sm leading-relaxed flex items-start gap-2">
             <Truck className="h-4 w-4 text-primary-600 flex-shrink-0 mt-0.5" />
             <span>Livraison à Dakar. Paiement possible à la livraison.</span>
           </p>
           <p className="text-gray-500 text-xs">
-            Une question ? Écrivez-nous sur WhatsApp : nous sommes à votre disposition.
+            Une question ? Écrivez-nous : nous sommes à votre disposition.
           </p>
         </div>
 
