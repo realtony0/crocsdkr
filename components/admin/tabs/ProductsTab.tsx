@@ -1,15 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Edit2, Trash2, Image as ImageIcon, Eye, EyeOff, Star } from 'lucide-react';
 import { Product } from '@/lib/products';
 import ProductForm from '../ProductForm';
 import ImageUpload from '../ImageUpload';
 
+interface Category {
+  id: string;
+  name: string;
+  productType?: string;
+  active?: boolean;
+  order?: number;
+}
+
 interface ProductsTabProps {
   products: Product[];
   onRefresh: () => void;
 }
+
+const LEGACY_PRODUCT_TYPE_MAP: Record<string, string> = {
+  classic: 'Crocs Classic',
+  collaboration: 'Bape x Crocs Classic Clog',
+};
 
 export default function ProductsTab({ products, onRefresh }: ProductsTabProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -17,6 +30,17 @@ export default function ProductsTab({ products, onRefresh }: ProductsTabProps) {
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [productStatuses, setProductStatuses] = useState<Record<string, any>>({});
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    fetch('/api/settings?section=categories')
+      .then((r) => r.json())
+      .then((data) => {
+        const cats: Category[] = Array.isArray(data) ? data : [];
+        setCategories(cats.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)));
+      })
+      .catch(() => setCategories([]));
+  }, []);
 
   const handleAddProduct = () => {
     setSelectedProduct(null);
@@ -34,10 +58,12 @@ export default function ProductsTab({ products, onRefresh }: ProductsTabProps) {
     setIsDeleting(product.id);
 
     try {
-      const productType = product.category === 'collaboration' 
-        ? 'Bape x Crocs Classic Clog' 
-        : 'Crocs Classic';
-      
+      const cat = categories.find((c) => c.id === product.category);
+      const productType = cat?.productType
+        || cat?.name
+        || LEGACY_PRODUCT_TYPE_MAP[product.category]
+        || product.category;
+
       const colorMap: Record<string, string> = {
         'Coloris Classique': 'Classique',
         'Blanc Pur': 'Blanc',
@@ -83,16 +109,16 @@ export default function ProductsTab({ products, onRefresh }: ProductsTabProps) {
             ...productStatuses,
             [productId]: {
               ...currentStatus,
-              [field]: newValue
-            }
-          }
+              [field]: newValue,
+            },
+          },
         }),
       });
 
       if (response.ok) {
-        setProductStatuses(prev => ({
+        setProductStatuses((prev) => ({
           ...prev,
-          [productId]: { ...currentStatus, [field]: newValue }
+          [productId]: { ...currentStatus, [field]: newValue },
         }));
       }
     } catch (error) {
@@ -107,12 +133,26 @@ export default function ProductsTab({ products, onRefresh }: ProductsTabProps) {
     window.location.reload();
   };
 
-  const bapeProducts = products.filter(p => p.category === 'collaboration');
-  const classicProducts = products.filter(p => p.category === 'classic');
+  const groupedByCategory = useMemo(() => {
+    const groups: Array<{ cat: Category | null; items: Product[] }> = [];
+    const seen = new Set<string>();
+
+    for (const cat of categories) {
+      const items = products.filter((p) => p.category === cat.id);
+      groups.push({ cat, items });
+      seen.add(cat.id);
+    }
+
+    const orphans = products.filter((p) => !seen.has(p.category));
+    if (orphans.length > 0) {
+      groups.push({ cat: null, items: orphans });
+    }
+
+    return groups;
+  }, [products, categories]);
 
   return (
     <div className="p-6">
-      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h2 className="text-xl font-black text-gray-900">Gestion des produits</h2>
         <div className="flex items-center gap-3">
@@ -133,47 +173,30 @@ export default function ProductsTab({ products, onRefresh }: ProductsTabProps) {
         </div>
       </div>
 
-      {/* Liste des produits */}
       <div className="space-y-8">
-        {/* Bape x Crocs */}
-        {bapeProducts.length > 0 && (
-          <div>
-            <h3 className="text-lg font-bold text-purple-600 mb-3">Bape x Crocs ({bapeProducts.length})</h3>
-            <div className="space-y-2">
-              {bapeProducts.map((product) => (
-                <ProductRow
-                  key={product.id}
-                  product={product}
-                  status={productStatuses[product.id]}
-                  onEdit={handleEditProduct}
-                  onDelete={handleDeleteProduct}
-                  onToggleStatus={toggleProductStatus}
-                  isDeleting={isDeleting === product.id}
-                />
-              ))}
+        {groupedByCategory.map(({ cat, items }) => {
+          if (items.length === 0) return null;
+          return (
+            <div key={cat?.id || 'orphans'}>
+              <h3 className="text-lg font-bold text-gray-900 mb-3">
+                {cat?.name || 'Autres'} ({items.length})
+              </h3>
+              <div className="space-y-2">
+                {items.map((product) => (
+                  <ProductRow
+                    key={product.id}
+                    product={product}
+                    status={productStatuses[product.id]}
+                    onEdit={handleEditProduct}
+                    onDelete={handleDeleteProduct}
+                    onToggleStatus={toggleProductStatus}
+                    isDeleting={isDeleting === product.id}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* Crocs Classic */}
-        {classicProducts.length > 0 && (
-          <div>
-            <h3 className="text-lg font-bold text-blue-600 mb-3">Crocs Classic ({classicProducts.length})</h3>
-            <div className="space-y-2">
-              {classicProducts.map((product) => (
-                <ProductRow
-                  key={product.id}
-                  product={product}
-                  status={productStatuses[product.id]}
-                  onEdit={handleEditProduct}
-                  onDelete={handleDeleteProduct}
-                  onToggleStatus={toggleProductStatus}
-                  isDeleting={isDeleting === product.id}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+          );
+        })}
 
         {products.length === 0 && (
           <div className="text-center py-12 text-gray-500">
@@ -182,7 +205,6 @@ export default function ProductsTab({ products, onRefresh }: ProductsTabProps) {
         )}
       </div>
 
-      {/* Modals */}
       {showForm && (
         <ProductForm
           product={selectedProduct}
@@ -218,20 +240,20 @@ function ProductRow({
   const isSoldOut = status?.soldOut || false;
 
   return (
-    <div className={`flex items-center gap-4 p-3 rounded-lg border transition-all ${
-      !isActive ? 'bg-gray-50 opacity-60' : 'bg-white hover:bg-gray-50'
-    }`}>
+    <div
+      className={`flex items-center gap-4 p-3 rounded-lg border transition-all ${
+        !isActive ? 'bg-gray-50 opacity-60' : 'bg-white hover:bg-gray-50'
+      }`}
+    >
       {product.images[0] && (
-        <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={product.images[0]}
-            alt={product.name}
-            className="w-14 h-14 object-cover rounded-lg flex-shrink-0"
-          />
-        </>
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={product.images[0]}
+          alt={product.name}
+          className="w-14 h-14 object-cover rounded-lg flex-shrink-0"
+        />
       )}
-      
+
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <h4 className="font-bold text-gray-900 truncate">{product.name}</h4>

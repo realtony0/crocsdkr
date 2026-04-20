@@ -1,4 +1,5 @@
 import productsData from './products-data.json';
+import settingsData from './site-settings.json';
 
 export interface Product {
   id: string;
@@ -12,22 +13,31 @@ export interface Product {
   category: string;
 }
 
-const BASE_PRODUCTS = {
+export interface CategoryConfig {
+  id: string;
+  name: string;
+  productType?: string;
+  description?: string;
+  basePrice: number;
+  active?: boolean;
+  order?: number;
+}
+
+const DEFAULT_SIZES = [36, 37, 38, 39, 40, 41, 42, 43, 44, 45];
+
+const LEGACY_BASE_PRODUCTS: Record<string, { category: string; basePrice: number; description: string }> = {
   'Crocs Classic': {
-    basePrice: 15000,
-    sizes: [36, 37, 38, 39, 40, 41, 42, 43, 44, 45],
     category: 'classic',
+    basePrice: 15000,
     description: 'Le modèle emblématique de Crocs, confortable et polyvalent pour toutes les occasions.',
   },
   'Bape x Crocs Classic Clog': {
-    basePrice: 20000,
-    sizes: [36, 37, 38, 39, 40, 41, 42, 43, 44, 45],
     category: 'collaboration',
+    basePrice: 20000,
     description: 'Édition limitée en collaboration avec Bape. Design exclusif et confort légendaire.',
   },
 };
 
-// Libellés de couleurs plus précis pour l'affichage
 const COLOR_LABELS: Record<string, string> = {
   Classique: 'Coloris Classique',
   Blanc: 'Blanc Pur',
@@ -54,63 +64,92 @@ function createProductSlug(productName: string, colorName: string): string {
   return `${productSlug}-${colorSlug}`;
 }
 
-export function getAllProductsFromData(data: any): Product[] {
+function resolveConfig(productType: string, categories?: CategoryConfig[]):
+  { category: string; basePrice: number; description: string } {
+  if (categories) {
+    const match = categories.find(
+      (c) => c.productType === productType || c.name === productType
+    );
+    if (match) {
+      return {
+        category: match.id,
+        basePrice: match.basePrice,
+        description: match.description || '',
+      };
+    }
+  }
+  const legacy = LEGACY_BASE_PRODUCTS[productType];
+  if (legacy) return legacy;
+  return {
+    category: slugify(productType),
+    basePrice: 15000,
+    description: '',
+  };
+}
+
+export function getAllProductsFromData(data: any, categories?: CategoryConfig[]): Product[] {
   if (!data || typeof data !== 'object') return [];
   const products: Product[] = [];
-  for (const [productName, baseConfig] of Object.entries(BASE_PRODUCTS)) {
-    const productImages = data[productName];
+  for (const [productType, productImages] of Object.entries(data)) {
     if (!productImages || typeof productImages !== 'object') continue;
-    const base = baseConfig as typeof BASE_PRODUCTS['Crocs Classic'];
-    for (const [colorName, images] of Object.entries(productImages)) {
+    const config = resolveConfig(productType, categories);
+    for (const [colorName, images] of Object.entries(productImages as Record<string, any>)) {
       if (!Array.isArray(images) || images.length === 0) continue;
       const originalColor = colorName as string;
       const displayColor = COLOR_LABELS[originalColor] ?? originalColor;
-      const slug = createProductSlug(productName, originalColor);
-      const fullName = `${productName} ${displayColor}`;
+      const slug = createProductSlug(productType, originalColor);
+      const fullName = `${productType} ${displayColor}`;
       products.push({
         id: slug,
         name: fullName,
         slug: slug,
-        description: base.description,
-        basePrice: base.basePrice,
+        description: config.description,
+        basePrice: config.basePrice,
         color: displayColor,
-        images: (images as string[]).sort(),
-        sizes: base.sizes,
-        category: base.category,
+        images: (images as string[]).slice().sort(),
+        sizes: DEFAULT_SIZES,
+        category: config.category,
       });
     }
   }
   return products.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+function getDefaultCategories(): CategoryConfig[] | undefined {
+  const cats = (settingsData as any)?.categories;
+  return Array.isArray(cats) ? cats : undefined;
+}
+
 export function getAllProducts(): Product[] {
-  return getAllProductsFromData(productsData as any);
+  return getAllProductsFromData(productsData as any, getDefaultCategories());
 }
 
 export function getProductBySlug(slug: string): Product | undefined {
   return getAllProducts().find(p => p.slug === slug);
 }
 
-export function getProductBySlugFromData(data: any, slug: string): Product | undefined {
-  return getAllProductsFromData(data).find(p => p.slug === slug);
+export function getProductBySlugFromData(data: any, slug: string, categories?: CategoryConfig[]): Product | undefined {
+  return getAllProductsFromData(data, categories).find(p => p.slug === slug);
 }
 
-export function getBapeProductsFromData(data: any): Product[] {
-  return getAllProductsFromData(data).filter(p => p.category === 'collaboration');
+export function getBapeProductsFromData(data: any, categories?: CategoryConfig[]): Product[] {
+  return getAllProductsFromData(data, categories).filter(p => p.category === 'collaboration');
 }
 
-export function getClassicProductsFromData(data: any): Product[] {
-  return getAllProductsFromData(data).filter(p => p.category === 'classic');
+export function getClassicProductsFromData(data: any, categories?: CategoryConfig[]): Product[] {
+  return getAllProductsFromData(data, categories).filter(p => p.category === 'classic');
+}
+
+export function getProductsByCategoryFromData(data: any, categoryId: string, categories?: CategoryConfig[]): Product[] {
+  return getAllProductsFromData(data, categories).filter(p => p.category === categoryId);
 }
 
 export function getAllColors(): string[] {
   const products = getAllProducts();
   const colorsSet = new Set<string>();
-  
   products.forEach(product => {
     colorsSet.add(product.color);
   });
-  
   return Array.from(colorsSet).sort();
 }
 

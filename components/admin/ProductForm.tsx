@@ -1,8 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Upload, Trash2, Plus } from 'lucide-react';
+import { X, Trash2, Plus } from 'lucide-react';
 import { Product } from '@/lib/products';
+
+interface Category {
+  id: string;
+  name: string;
+  productType?: string;
+  description?: string;
+  basePrice: number;
+  active?: boolean;
+  order?: number;
+}
 
 interface ProductFormProps {
   product: Product | null;
@@ -10,10 +20,15 @@ interface ProductFormProps {
   onSave: () => void;
 }
 
+function categoryProductType(cat: Category): string {
+  return cat.productType?.trim() || cat.name;
+}
+
 export default function ProductForm({ product, onClose, onSave }: ProductFormProps) {
+  const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
-    productType: 'Crocs Classic',
-    category: 'classic',
+    categoryId: '',
+    productType: '',
     color: '',
     price: '15000',
     description: '',
@@ -25,32 +40,53 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
   const [originalColor, setOriginalColor] = useState<string>('');
 
   useEffect(() => {
-    if (product) {
-      const isBape = product.category === 'collaboration';
-      
-      // Mapping inverse des couleurs
-      const colorMap: Record<string, string> = {
-        'Coloris Classique': 'Classique',
-        'Blanc Pur': 'Blanc',
-        'Noir Profond': 'Noir',
-        'Bleu Royal': 'Bleu',
-        'Bleu Marine': 'Bleu Foncé',
-        'Rose Pastel': 'Rose',
-        'Vert Kaki': 'Vert',
-      };
-      const origColor = colorMap[product.color] || product.color;
-      setOriginalColor(origColor);
+    fetch('/api/settings?section=categories')
+      .then((r) => r.json())
+      .then((data) => {
+        const cats: Category[] = Array.isArray(data) ? data : [];
+        const active = cats
+          .filter((c) => c.active !== false)
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        setCategories(active);
 
-      setFormData({
-        productType: isBape ? 'Bape x Crocs Classic Clog' : 'Crocs Classic',
-        category: product.category,
-        color: origColor,
-        price: product.basePrice.toString(),
-        description: product.description,
-        sizes: product.sizes.join(','),
-      });
-      setImages(product.images);
-    }
+        if (product) {
+          const isBape = product.category === 'collaboration';
+          const colorMap: Record<string, string> = {
+            'Coloris Classique': 'Classique',
+            'Blanc Pur': 'Blanc',
+            'Noir Profond': 'Noir',
+            'Bleu Royal': 'Bleu',
+            'Bleu Marine': 'Bleu Foncé',
+            'Rose Pastel': 'Rose',
+            'Vert Kaki': 'Vert',
+          };
+          const origColor = colorMap[product.color] || product.color;
+          setOriginalColor(origColor);
+
+          const matching = active.find((c) => c.id === product.category)
+            ?? active.find((c) => categoryProductType(c) === (isBape ? 'Bape x Crocs Classic Clog' : 'Crocs Classic'));
+
+          setFormData({
+            categoryId: matching?.id || active[0]?.id || '',
+            productType: matching ? categoryProductType(matching) : (isBape ? 'Bape x Crocs Classic Clog' : 'Crocs Classic'),
+            color: origColor,
+            price: product.basePrice.toString(),
+            description: product.description,
+            sizes: product.sizes.join(','),
+          });
+          setImages(product.images);
+        } else if (active.length > 0) {
+          const first = active[0];
+          setFormData((prev) => ({
+            ...prev,
+            categoryId: first.id,
+            productType: categoryProductType(first),
+            price: first.basePrice.toString(),
+            description: first.description || '',
+          }));
+        }
+      })
+      .catch(() => setCategories([]));
   }, [product]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,25 +104,27 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
     setImages(images.filter((_, i) => i !== index));
   };
 
-  const handleCategoryChange = (category: string) => {
-    const productType = category === 'collaboration' ? 'Bape x Crocs Classic Clog' : 'Crocs Classic';
-    const price = category === 'collaboration' ? '20000' : '15000';
-    setFormData({ 
-      ...formData, 
-      category, 
-      productType,
-      price
+  const handleCategoryChange = (cat: Category) => {
+    setFormData({
+      ...formData,
+      categoryId: cat.id,
+      productType: categoryProductType(cat),
+      price: cat.basePrice.toString(),
+      description: cat.description || formData.description,
     });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    if (!formData.productType) {
+      alert('Veuillez sélectionner une catégorie');
+      return;
+    }
     if (!formData.color.trim()) {
       alert('Veuillez entrer une couleur');
       return;
     }
-
     if (images.length === 0 && newFiles.length === 0) {
       alert('Veuillez ajouter au moins une image');
       return;
@@ -97,10 +135,9 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
     try {
       let allImages = [...images];
 
-      // Upload des nouvelles images si présentes
       if (newFiles.length > 0) {
         const uploadFormData = new FormData();
-        newFiles.forEach(file => uploadFormData.append('files', file));
+        newFiles.forEach((file) => uploadFormData.append('files', file));
         uploadFormData.append('productName', formData.productType);
         uploadFormData.append('color', formData.color);
 
@@ -114,28 +151,29 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
         if (uploadData.success && uploadData.paths) {
           allImages = [...allImages, ...uploadData.paths];
         } else {
-          throw new Error(uploadData.error || 'Erreur lors de l\'upload');
+          throw new Error(uploadData.error || "Erreur lors de l'upload");
         }
       }
 
-      // Sauvegarder le produit
       const method = product ? 'PUT' : 'POST';
-      const body = product ? {
-        productType: formData.productType,
-        oldColor: originalColor,
-        newColor: formData.color,
-        images: allImages,
-        price: parseInt(formData.price),
-        description: formData.description,
-        sizes: formData.sizes.split(',').map(s => parseInt(s.trim())),
-      } : {
-        productType: formData.productType,
-        color: formData.color,
-        images: allImages,
-        price: parseInt(formData.price),
-        description: formData.description,
-        sizes: formData.sizes.split(',').map(s => parseInt(s.trim())),
-      };
+      const body = product
+        ? {
+            productType: formData.productType,
+            oldColor: originalColor,
+            newColor: formData.color,
+            images: allImages,
+            price: parseInt(formData.price),
+            description: formData.description,
+            sizes: formData.sizes.split(',').map((s) => parseInt(s.trim())),
+          }
+        : {
+            productType: formData.productType,
+            color: formData.color,
+            images: allImages,
+            price: parseInt(formData.price),
+            description: formData.description,
+            sizes: formData.sizes.split(',').map((s) => parseInt(s.trim())),
+          };
 
       const response = await fetch('/api/products', {
         method,
@@ -174,40 +212,42 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Catégorie */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-3">
               Catégorie *
             </label>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => handleCategoryChange('classic')}
-                className={`p-4 rounded-xl border-2 text-left transition-all ${
-                  formData.category === 'classic'
-                    ? 'border-primary-600 bg-primary-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <p className="font-bold text-gray-900">Crocs Classic</p>
-                <p className="text-sm text-gray-600">15 000 FCFA</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleCategoryChange('collaboration')}
-                className={`p-4 rounded-xl border-2 text-left transition-all ${
-                  formData.category === 'collaboration'
-                    ? 'border-primary-600 bg-primary-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <p className="font-bold text-gray-900">Bape x Crocs</p>
-                <p className="text-sm text-gray-600">20 000 FCFA</p>
-              </button>
-            </div>
+            {categories.length === 0 ? (
+              <div className="p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl text-sm text-yellow-800">
+                Aucune catégorie active. Créez-en une dans l&apos;onglet &quot;Catégories&quot;.
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => handleCategoryChange(cat)}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.categoryId === cat.id
+                        ? 'border-primary-600 bg-primary-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <p className="font-bold text-gray-900">{cat.name}</p>
+                    <p className="text-sm text-gray-600">
+                      {cat.basePrice.toLocaleString('fr-FR')} FCFA
+                    </p>
+                    {cat.productType && cat.productType !== cat.name && (
+                      <p className="text-xs text-gray-400 mt-1 font-mono truncate">
+                        {cat.productType}
+                      </p>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Couleur */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
               Couleur / Variante *
@@ -217,15 +257,11 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
               value={formData.color}
               onChange={(e) => setFormData({ ...formData, color: e.target.value })}
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-600 focus:outline-none"
-              placeholder="Ex: Blanc, Noir, Blue Camo, Camo Pink..."
+              placeholder="Ex: Blanc, Noir, Blue Camo..."
               required
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Pour Bape: Blue Camo, Camo Pink. Pour Classic: Blanc, Noir, Bleu, Rose, Vert, etc.
-            </p>
           </div>
 
-          {/* Prix */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
               Prix (FCFA) *
@@ -241,7 +277,6 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
             />
           </div>
 
-          {/* Images existantes */}
           {images.length > 0 && (
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-3">
@@ -269,13 +304,11 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
             </div>
           )}
 
-          {/* Nouvelles images */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-3">
               {images.length > 0 ? 'Ajouter des images' : 'Images *'}
             </label>
-            
-            {/* Preview des nouveaux fichiers */}
+
             {newFiles.length > 0 && (
               <div className="grid grid-cols-4 gap-3 mb-4">
                 {newFiles.map((file, index) => (
@@ -301,7 +334,6 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
               </div>
             )}
 
-            {/* Bouton d'ajout */}
             <label className="flex items-center justify-center gap-2 p-6 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary-600 hover:bg-primary-50 transition-all">
               <Plus className="h-5 w-5 text-gray-500" />
               <span className="text-gray-600 font-medium">Sélectionner des images</span>
@@ -315,7 +347,6 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
             </label>
           </div>
 
-          {/* Tailles */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
               Tailles disponibles
@@ -329,7 +360,6 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
             />
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
               Description
@@ -343,7 +373,6 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
             />
           </div>
 
-          {/* Actions */}
           <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200">
             <button
               type="button"
@@ -355,7 +384,7 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
             </button>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || categories.length === 0}
               className="px-6 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-all disabled:opacity-50 flex items-center gap-2"
             >
               {isLoading ? (

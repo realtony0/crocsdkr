@@ -76,6 +76,7 @@
     {
       "id": "classic",
       "name": "Crocs Classic",
+      "productType": "Crocs Classic",
       "description": "Le modèle emblématique",
       "basePrice": 15000,
       "active": true,
@@ -84,6 +85,7 @@
     {
       "id": "collaboration",
       "name": "Bape x Crocs",
+      "productType": "Bape x Crocs Classic Clog",
       "description": "Édition limitée",
       "basePrice": 20000,
       "active": true,
@@ -92,6 +94,7 @@
     {
       "id": "xcollab",
       "name": "Crocs X Collab",
+      "productType": "Crocs X Collab",
       "description": "Collaborations exclusives",
       "basePrice": 20000,
       "active": true,

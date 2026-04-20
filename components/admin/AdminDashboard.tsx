@@ -59,15 +59,14 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      // Charger les produits depuis l'API (Supabase)
-      const productsRes = await fetch('/api/products');
+      const [productsRes, settingsRes] = await Promise.all([
+        fetch('/api/products'),
+        fetch('/api/settings'),
+      ]);
       const productsData = await productsRes.json();
-      const allProducts = getAllProductsFromData(productsData);
-      setProducts(allProducts);
-
-      // Charger les paramètres depuis l'API (Supabase)
-      const response = await fetch('/api/settings');
-      const settingsData = await response.json();
+      const settingsData = await settingsRes.json();
+      const cats = Array.isArray(settingsData?.categories) ? settingsData.categories : undefined;
+      setProducts(getAllProductsFromData(productsData, cats));
       setSettings(settingsData);
     } catch (error) {
       console.error('Erreur:', error);
@@ -81,8 +80,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setSettings(settingsData);
   };
 
-  const bapeProducts = products.filter(p => p.category === 'collaboration');
-  const classicProducts = products.filter(p => p.category === 'classic');
+  const categories = Array.isArray(settings?.categories)
+    ? [...settings.categories].sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
+    : [];
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -136,12 +136,16 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <p className="text-2xl font-black text-gray-900">{products.length}</p>
           </div>
           <div className="bg-white p-4 rounded-xl shadow-sm">
-            <p className="text-sm text-gray-600">Bape x Crocs</p>
-            <p className="text-2xl font-black text-purple-600">{bapeProducts.length}</p>
+            <p className="text-sm text-gray-600">Catégories actives</p>
+            <p className="text-2xl font-black text-primary-600">
+              {categories.filter((c: any) => c.active !== false).length}
+            </p>
           </div>
           <div className="bg-white p-4 rounded-xl shadow-sm">
-            <p className="text-sm text-gray-600">Crocs Classic</p>
-            <p className="text-2xl font-black text-blue-600">{classicProducts.length}</p>
+            <p className="text-sm text-gray-600">Codes promo actifs</p>
+            <p className="text-2xl font-black text-purple-600">
+              {(settings?.promoCodes || []).filter((p: any) => p.active).length}
+            </p>
           </div>
           <div className="bg-white p-4 rounded-xl shadow-sm">
             <p className="text-sm text-gray-600">Mode maintenance</p>

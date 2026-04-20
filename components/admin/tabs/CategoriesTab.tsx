@@ -6,6 +6,7 @@ import { Plus, Edit2, Trash2, Eye, EyeOff, X, ArrowUp, ArrowDown } from 'lucide-
 interface Category {
   id: string;
   name: string;
+  productType?: string;
   description: string;
   basePrice: number;
   active: boolean;
@@ -233,6 +234,7 @@ function CategoryForm({
 }) {
   const [formData, setFormData] = useState({
     name: category?.name || '',
+    productType: category?.productType || '',
     description: category?.description || '',
     basePrice: category?.basePrice || 15000,
     active: category?.active ?? true,
@@ -257,6 +259,19 @@ function CategoryForm({
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-600 focus:outline-none"
+              placeholder="Crocs Classic"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              Identifiant produit
+              <span className="font-normal text-xs text-gray-500 ml-2">(clé interne, laisser vide pour utiliser le nom)</span>
+            </label>
+            <input
+              type="text"
+              value={formData.productType}
+              onChange={(e) => setFormData({ ...formData, productType: e.target.value })}
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl font-mono focus:border-primary-600 focus:outline-none"
               placeholder="Crocs Classic"
             />
           </div>
