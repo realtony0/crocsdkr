@@ -88,6 +88,14 @@
       "basePrice": 20000,
       "active": true,
       "order": 1
+    },
+    {
+      "id": "xcollab",
+      "name": "Crocs X Collab",
+      "description": "Collaborations exclusives",
+      "basePrice": 20000,
+      "active": true,
+      "order": 3
     }
   ],
   "admin": {
