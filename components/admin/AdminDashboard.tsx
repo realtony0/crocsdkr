@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  LogOut, Package, Settings, MessageSquare, Award, 
-  Layers, Home, Shield, RefreshCw, ShoppingBag
+import {
+  LogOut, Package, Settings, MessageSquare, Award,
+  Layers, Home, Shield, RefreshCw, ShoppingBag,
+  LayoutDashboard, Boxes, Users, Tag, FileText
 } from 'lucide-react';
 import { getAllProductsFromData, Product } from '@/lib/products';
 import ProductsTab from './tabs/ProductsTab';
@@ -14,17 +15,29 @@ import WhyUsTab from './tabs/WhyUsTab';
 import CategoriesTab from './tabs/CategoriesTab';
 import SettingsTab from './tabs/SettingsTab';
 import OrdersTab from './tabs/OrdersTab';
+import DashboardTab from './tabs/DashboardTab';
+import StockTab from './tabs/StockTab';
+import CustomersTab from './tabs/CustomersTab';
+import PromoCodesTab from './tabs/PromoCodesTab';
+import ReportsTab from './tabs/ReportsTab';
 import EnablePushBanner from './EnablePushBanner';
 
 interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type TabType = 'products' | 'orders' | 'hero' | 'contact' | 'testimonials' | 'whyus' | 'categories' | 'settings';
+type TabType =
+  | 'dashboard' | 'products' | 'orders' | 'stock' | 'customers' | 'promo' | 'reports'
+  | 'hero' | 'contact' | 'testimonials' | 'whyus' | 'categories' | 'settings';
 
 const tabs = [
+  { id: 'dashboard' as TabType, label: 'Tableau de bord', icon: LayoutDashboard },
   { id: 'products' as TabType, label: 'Produits', icon: Package },
+  { id: 'stock' as TabType, label: 'Stock', icon: Boxes },
   { id: 'orders' as TabType, label: 'Commandes', icon: ShoppingBag },
+  { id: 'customers' as TabType, label: 'Clients', icon: Users },
+  { id: 'promo' as TabType, label: 'Codes promo', icon: Tag },
+  { id: 'reports' as TabType, label: 'Rapports', icon: FileText },
   { id: 'hero' as TabType, label: 'Page d\'accueil', icon: Home },
   { id: 'contact' as TabType, label: 'Contact', icon: MessageSquare },
   { id: 'testimonials' as TabType, label: 'Témoignages', icon: MessageSquare },
@@ -34,7 +47,7 @@ const tabs = [
 ];
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('products');
+  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [products, setProducts] = useState<Product[]>([]);
   const [settings, setSettings] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -168,11 +181,26 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-sm">
+            {activeTab === 'dashboard' && (
+              <DashboardTab products={products} stock={settings?.productStock || {}} />
+            )}
             {activeTab === 'products' && (
               <ProductsTab products={products} onRefresh={loadData} />
             )}
+            {activeTab === 'stock' && (
+              <StockTab products={products} stock={settings?.productStock || {}} onUpdate={handleSettingsUpdate} />
+            )}
             {activeTab === 'orders' && (
               <OrdersTab />
+            )}
+            {activeTab === 'customers' && (
+              <CustomersTab />
+            )}
+            {activeTab === 'promo' && settings && (
+              <PromoCodesTab promoCodes={settings.promoCodes || []} onUpdate={handleSettingsUpdate} />
+            )}
+            {activeTab === 'reports' && (
+              <ReportsTab />
             )}
             {activeTab === 'hero' && settings && (
               <HeroTab settings={settings.hero} onUpdate={handleSettingsUpdate} />

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, ShoppingBag } from 'lucide-react';
+import { X, ShoppingBag, Tag } from 'lucide-react';
 import { buildChatLink } from '@/lib/chat-link';
 
 export interface CartLineItem {
@@ -23,6 +23,11 @@ interface CartCheckoutFormProps {
 export default function CartCheckoutForm({ items, totalPrice, onClose, onSuccess }: CartCheckoutFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [promoInput, setPromoInput] = useState('');
+  const [promoStatus, setPromoStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
+  const [promoMessage, setPromoMessage] = useState('');
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoCode, setPromoCode] = useState('');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -32,6 +37,44 @@ export default function CartCheckoutForm({ items, totalPrice, onClose, onSuccess
     city: 'Dakar',
     message: '',
   });
+
+  const finalTotal = Math.max(0, totalPrice - promoDiscount);
+
+  const applyPromo = async () => {
+    if (!promoInput.trim()) return;
+    setPromoStatus('checking');
+    setPromoMessage('');
+    try {
+      const res = await fetch('/api/promo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: promoInput.trim(), total: totalPrice }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setPromoStatus('valid');
+        setPromoDiscount(data.discount);
+        setPromoCode(data.code);
+        setPromoMessage(`-${data.discount.toLocaleString('fr-FR')} FCFA appliqué`);
+      } else {
+        setPromoStatus('invalid');
+        setPromoDiscount(0);
+        setPromoCode('');
+        setPromoMessage(data.error || 'Code invalide');
+      }
+    } catch {
+      setPromoStatus('invalid');
+      setPromoMessage('Erreur de validation');
+    }
+  };
+
+  const clearPromo = () => {
+    setPromoInput('');
+    setPromoCode('');
+    setPromoDiscount(0);
+    setPromoStatus('idle');
+    setPromoMessage('');
+  };
 
   const fetchContactNumber = async (): Promise<string> => {
     try {
@@ -57,7 +100,10 @@ export default function CartCheckoutForm({ items, totalPrice, onClose, onSuccess
         `- ${it.name} • ${it.color} • Pt ${it.size} × ${it.quantity} — ${lineTotal.toLocaleString('fr-FR')} FCFA`
       );
     }
-    lines.push(`Total: ${totalPrice.toLocaleString('fr-FR')} FCFA`);
+    if (promoCode && promoDiscount > 0) {
+      lines.push(`Code promo: ${promoCode} (-${promoDiscount.toLocaleString('fr-FR')} FCFA)`);
+    }
+    lines.push(`Total: ${finalTotal.toLocaleString('fr-FR')} FCFA`);
     if (formData.message.trim()) lines.push(`Message: ${formData.message.trim()}`);
     return lines.join('\n');
   };
@@ -88,8 +134,18 @@ export default function CartCheckoutForm({ items, totalPrice, onClose, onSuccess
             quantity: it.quantity,
             price: it.price,
           })),
+          promoCode: promoCode || undefined,
+          promoDiscount: promoDiscount || undefined,
         }),
       });
+
+      if (promoCode && promoDiscount > 0) {
+        fetch('/api/promo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: promoCode, total: totalPrice, apply: true }),
+        }).catch(() => {});
+      }
 
       const data = await response.json().catch(() => ({} as any));
       const orderId = response.ok ? (data?.orderId ?? '') : '';
@@ -138,9 +194,66 @@ export default function CartCheckoutForm({ items, totalPrice, onClose, onSuccess
                 {it.name} • {it.color} • Pt {it.size} × {it.quantity} — {it.price.toLocaleString('fr-FR')} FCFA
               </p>
             ))}
-            <p className="text-lg font-black text-primary-600 mt-2">
-              Total : {totalPrice.toLocaleString('fr-FR')} FCFA
-            </p>
+            {promoDiscount > 0 ? (
+              <>
+                <p className="text-sm text-gray-600 mt-2">Sous-total : {totalPrice.toLocaleString('fr-FR')} FCFA</p>
+                <p className="text-sm text-green-600 font-bold">Code {promoCode} : -{promoDiscount.toLocaleString('fr-FR')} FCFA</p>
+                <p className="text-lg font-black text-primary-600 mt-1">
+                  Total : {finalTotal.toLocaleString('fr-FR')} FCFA
+                </p>
+              </>
+            ) : (
+              <p className="text-lg font-black text-primary-600 mt-2">
+                Total : {totalPrice.toLocaleString('fr-FR')} FCFA
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1 flex items-center gap-1">
+              <Tag className="h-4 w-4" /> Code promo (optionnel)
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={promoInput}
+                onChange={(e) => {
+                  setPromoInput(e.target.value.toUpperCase());
+                  if (promoStatus !== 'idle') {
+                    setPromoStatus('idle');
+                    setPromoMessage('');
+                    setPromoDiscount(0);
+                    setPromoCode('');
+                  }
+                }}
+                disabled={promoStatus === 'valid'}
+                className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-xl font-mono uppercase focus:border-primary-600 focus:outline-none disabled:bg-gray-50"
+                placeholder="CODE"
+              />
+              {promoStatus === 'valid' ? (
+                <button
+                  type="button"
+                  onClick={clearPromo}
+                  className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50"
+                >
+                  Retirer
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={applyPromo}
+                  disabled={!promoInput.trim() || promoStatus === 'checking'}
+                  className="px-4 py-2 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 disabled:opacity-50"
+                >
+                  {promoStatus === 'checking' ? '...' : 'Appliquer'}
+                </button>
+              )}
+            </div>
+            {promoMessage && (
+              <p className={`text-xs mt-1 font-medium ${promoStatus === 'valid' ? 'text-green-600' : 'text-red-600'}`}>
+                {promoMessage}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

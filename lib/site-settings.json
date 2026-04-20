@@ -106,5 +106,7 @@
     "enabled": false,
     "message": "Site en maintenance. Revenez bientôt !"
   },
-  "productStatuses": {}
+  "productStatuses": {},
+  "productStock": {},
+  "promoCodes": []
 }

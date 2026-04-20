@@ -25,6 +25,8 @@ export async function POST(request: NextRequest) {
       size,
       quantity,
       totalPrice,
+      promoCode,
+      promoDiscount,
     } = body;
 
     if (!firstName?.trim() || !lastName?.trim() || !phone?.trim() || !address?.trim()) {
@@ -37,10 +39,12 @@ export async function POST(request: NextRequest) {
     let newOrder: any;
 
     if (cartItems && Array.isArray(cartItems) && cartItems.length > 0) {
-      const total = cartItems.reduce(
+      const subtotal = cartItems.reduce(
         (sum: number, it: any) => sum + (Number(it.price) || 0) * (Number(it.quantity) || 1),
         0
       );
+      const discount = Number(promoDiscount) || 0;
+      const total = Math.max(0, subtotal - discount);
       newOrder = {
         id: `ORD-${Date.now()}`,
         createdAt: new Date().toISOString(),
@@ -63,6 +67,9 @@ export async function POST(request: NextRequest) {
           quantity: Number(it.quantity) || 1,
           price: Number(it.price),
         })),
+        subtotal,
+        promoCode: promoCode || null,
+        promoDiscount: discount || null,
         totalPrice: total,
         message: (message || '').trim(),
       };
