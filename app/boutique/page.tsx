@@ -87,17 +87,15 @@ export default function BoutiquePage() {
       {groups.length > 1 && (
         <section className="sticky top-20 z-40 bg-white border-b border-gray-100 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-center gap-6 py-4 flex-wrap">
-              {groups.map((g, i) => (
-                <div key={g.cat.id} className="flex items-center gap-6">
-                  {i > 0 && <span className="w-1 h-1 bg-gray-300 rounded-full" />}
-                  <a
-                    href={`#cat-${g.cat.id}`}
-                    className="text-sm font-bold uppercase tracking-wider text-gray-600 hover:text-black transition-colors"
-                  >
-                    {g.cat.name}
-                  </a>
-                </div>
+            <div className="flex items-center justify-center gap-x-6 gap-y-2 py-4 flex-wrap">
+              {groups.map((g) => (
+                <a
+                  key={g.cat.id}
+                  href={`#cat-${g.cat.id}`}
+                  className="text-sm font-bold uppercase tracking-wider text-gray-600 hover:text-black transition-colors"
+                >
+                  {g.cat.name}
+                </a>
               ))}
             </div>
           </div>
