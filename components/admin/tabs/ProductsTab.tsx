@@ -129,8 +129,7 @@ export default function ProductsTab({ products, onRefresh }: ProductsTabProps) {
   const handleFormSave = () => {
     setShowForm(false);
     setSelectedProduct(null);
-    alert('Produit sauvegardé ! La page va se recharger.');
-    window.location.reload();
+    onRefresh();
   };
 
   const groupedByCategory = useMemo(() => {
