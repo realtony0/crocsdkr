@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { X, ShoppingBag } from 'lucide-react';
 import { Product } from '@/lib/products';
 import { buildChatLink } from '@/lib/chat-link';
+import { fbq } from '@/lib/fbq';
 
 interface OrderFormProps {
   product: Product;
@@ -97,6 +98,13 @@ export default function OrderForm({ product, selectedSize, onClose, onSuccess }:
         return;
       }
 
+      fbq('Purchase', {
+        content_ids: [product.slug],
+        content_name: product.name,
+        value: totalPrice,
+        currency: 'XOF',
+        num_items: 1,
+      });
       onSuccess();
       onClose();
       window.location.href = link;

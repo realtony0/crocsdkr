@@ -8,6 +8,7 @@ import OrderForm from '@/components/OrderForm';
 import { useCart } from '@/context/CartContext';
 import { motion } from 'framer-motion';
 import { ShoppingBag, ShoppingCart } from 'lucide-react';
+import { fbq } from '@/lib/fbq';
 
 interface PageProps {
   params: {
@@ -35,6 +36,17 @@ export default function ProductPage({ params }: PageProps) {
       .finally(() => setLoading(false));
   }, [params.slug]);
 
+  useEffect(() => {
+    if (!product) return;
+    fbq('ViewContent', {
+      content_ids: [product.slug],
+      content_name: product.name,
+      content_type: 'product',
+      value: product.basePrice,
+      currency: 'XOF',
+    });
+  }, [product]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -55,6 +67,13 @@ export default function ProductPage({ params }: PageProps) {
       alert('Veuillez sélectionner une pointure');
       return;
     }
+    fbq('InitiateCheckout', {
+      content_ids: [product.slug],
+      content_name: product.name,
+      value: product.basePrice,
+      currency: 'XOF',
+      num_items: 1,
+    });
     setShowOrderForm(true);
   };
 
@@ -63,6 +82,12 @@ export default function ProductPage({ params }: PageProps) {
       alert('Veuillez sélectionner une pointure');
       return;
     }
+    fbq('AddToCart', {
+      content_ids: [product.slug],
+      content_name: product.name,
+      value: product.basePrice,
+      currency: 'XOF',
+    });
     addToCart(product.slug, selectedSize);
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);

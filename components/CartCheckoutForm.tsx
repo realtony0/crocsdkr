@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, ShoppingBag } from 'lucide-react';
 import { buildChatLink } from '@/lib/chat-link';
+import { fbq } from '@/lib/fbq';
 
 export interface CartLineItem {
   name: string;
@@ -66,6 +67,12 @@ export default function CartCheckoutForm({ items, totalPrice, onClose, onSuccess
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
+    fbq('InitiateCheckout', {
+      content_ids: items.map((it) => it.slug),
+      num_items: items.reduce((s, it) => s + it.quantity, 0),
+      value: totalPrice,
+      currency: 'XOF',
+    });
 
     try {
       const contactNumberPromise = fetchContactNumber();
@@ -107,6 +114,12 @@ export default function CartCheckoutForm({ items, totalPrice, onClose, onSuccess
         localStorage.setItem('crocsdkr_cart', JSON.stringify([]));
       } catch (_) {}
 
+      fbq('Purchase', {
+        content_ids: items.map((it) => it.slug),
+        num_items: items.reduce((s, it) => s + it.quantity, 0),
+        value: totalPrice,
+        currency: 'XOF',
+      });
       onSuccess();
       onClose();
       window.location.href = link;
