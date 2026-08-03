@@ -232,14 +232,14 @@ export default function CartCheckoutForm({ items, totalPrice, onClose, onSuccess
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50"
+              className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 font-bold hover:bg-gray-50"
             >
               Annuler
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 px-4 py-3 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 flex items-center justify-center gap-2 disabled:opacity-50"
+              className="flex-1 px-4 py-3 bg-primary-600 text-white font-bold hover:bg-primary-700 flex items-center justify-center gap-2 disabled:opacity-50"
             >
               <ShoppingBag className="h-5 w-5" />
               {isSubmitting ? 'Envoi...' : 'Confirmer la commande'}

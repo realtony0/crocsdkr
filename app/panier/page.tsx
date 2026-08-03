@@ -50,7 +50,7 @@ export default function PanierPage() {
         <p className="text-gray-600 mb-8">Ajoutez des articles depuis la boutique.</p>
         <Link
           href="/boutique"
-          className="inline-flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-primary-700"
+          className="inline-flex items-center gap-2 bg-primary-600 text-white px-6 py-3 font-bold hover:bg-primary-700"
         >
           Voir la boutique
           <ArrowRight className="h-5 w-5" />
@@ -138,14 +138,14 @@ export default function PanierPage() {
         <div className="flex gap-3">
           <Link
             href="/boutique"
-            className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50"
+            className="px-6 py-3 border-2 border-gray-300 text-gray-700 font-bold hover:bg-gray-50"
           >
             Continuer mes achats
           </Link>
           <button
             type="button"
             onClick={() => setShowCheckout(true)}
-            className="px-6 py-3 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 flex items-center gap-2"
+            className="px-6 py-3 bg-primary-600 text-white font-bold hover:bg-primary-700 flex items-center gap-2"
           >
             Passer la commande
             <ArrowRight className="h-5 w-5" />

@@ -17,8 +17,8 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
 
   return (
     <Link href={`/produit/${product.slug}`}>
-      <motion.div 
-        className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500"
+      <motion.div
+        className="group relative bg-white overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500"
         whileHover={{ y: -8 }}
       >
         {/* Image Container */}
@@ -44,7 +44,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           
           {/* Quick View Button */}
           <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-            <span className="flex items-center justify-center gap-2 w-full bg-white text-gray-900 py-3 px-4 font-bold text-sm rounded-xl shadow-lg">
+            <span className="flex items-center justify-center gap-2 w-full bg-white text-gray-900 py-3 px-4 font-bold text-sm shadow-lg">
               Voir le produit
               <ArrowUpRight className="h-4 w-4" />
             </span>

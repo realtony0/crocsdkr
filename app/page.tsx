@@ -1,4 +1,5 @@
 import Hero from '@/components/Hero';
+import Categories from '@/components/Categories';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import WhyUs from '@/components/WhyUs';
 import Testimonials from '@/components/Testimonials';
@@ -7,11 +8,12 @@ import { getAllProductsFromData } from '@/lib/products';
 
 export default async function Home() {
   const data = await getProductsAsync();
-  const products = getAllProductsFromData(data).slice(0, 6);
+  const allProducts = getAllProductsFromData(data);
   return (
     <>
       <Hero />
-      <FeaturedProducts products={products} />
+      <Categories products={allProducts} />
+      <FeaturedProducts products={allProducts.slice(0, 6)} />
       <WhyUs />
       <Testimonials />
     </>

@@ -37,7 +37,7 @@ export default function Testimonials() {
           {testimonials.map((testimonial: any) => (
             <div
               key={testimonial.id}
-              className="bg-gray-50 p-6 rounded-2xl"
+              className="bg-gray-50 p-6"
             >
               <div className="flex items-center mb-3">
                 {[...Array(testimonial.rating || 5)].map((_, i) => (
