@@ -88,30 +88,6 @@
       "basePrice": 20000,
       "active": true,
       "order": 1
-    },
-    {
-      "id": "enfant",
-      "name": "Crocs Enfant",
-      "description": "Le confort adapté aux plus petits",
-      "basePrice": 12000,
-      "active": true,
-      "order": 3
-    },
-    {
-      "id": "literide",
-      "name": "Crocs LiteRide",
-      "description": "Une nouvelle génération de confort ultra-léger",
-      "basePrice": 18000,
-      "active": true,
-      "order": 4
-    },
-    {
-      "id": "jibbitz",
-      "name": "Jibbitz & Accessoires",
-      "description": "Personnalisez vos Crocs à votre image",
-      "basePrice": 3000,
-      "active": true,
-      "order": 5
     }
   ],
   "admin": {
