@@ -6,6 +6,8 @@ import Testimonials from '@/components/Testimonials';
 import { getProductsAsync } from '@/lib/products-db';
 import { getAllProductsFromData } from '@/lib/products';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const data = await getProductsAsync();
   const allProducts = getAllProductsFromData(data);
