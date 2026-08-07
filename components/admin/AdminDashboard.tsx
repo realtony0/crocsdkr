@@ -169,7 +169,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         ) : (
           <div className="bg-white rounded-xl shadow-sm">
             {activeTab === 'products' && (
-              <ProductsTab products={products} onRefresh={loadData} />
+              <ProductsTab products={products} categories={settings?.categories ?? []} onRefresh={loadData} />
             )}
             {activeTab === 'orders' && (
               <OrdersTab />

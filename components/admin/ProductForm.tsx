@@ -2,7 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { X, Upload, Trash2, Plus } from 'lucide-react';
-import { Product } from '@/lib/products';
+import { Product, categoryProductName, getOriginalColor } from '@/lib/products';
+import { getCategories } from '@/lib/settings';
+
+interface Category {
+  id: string;
+  name: string;
+  description: string;
+  basePrice: number;
+  active: boolean;
+  order: number;
+}
 
 interface ProductFormProps {
   product: Product | null;
@@ -10,12 +20,17 @@ interface ProductFormProps {
   onSave: () => void;
 }
 
+function sortActive(categories: Category[]): Category[] {
+  return categories.filter((c) => c.active).sort((a, b) => a.order - b.order);
+}
+
 export default function ProductForm({ product, onClose, onSave }: ProductFormProps) {
+  const [categories, setCategories] = useState<Category[]>(sortActive(getCategories()));
   const [formData, setFormData] = useState({
-    productType: 'Crocs Classic',
-    category: 'classic',
+    productType: categoryProductName(categories[0] ?? { id: 'classic', name: 'Crocs Classic' }),
+    category: categories[0]?.id ?? 'classic',
     color: '',
-    price: '15000',
+    price: (categories[0]?.basePrice ?? 15000).toString(),
     description: '',
     sizes: '36,37,38,39,40,41,42,43,44,45',
   });
@@ -25,24 +40,24 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
   const [originalColor, setOriginalColor] = useState<string>('');
 
   useEffect(() => {
+    fetch('/api/settings?section=categories')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setCategories(sortActive(data));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     if (product) {
-      const isBape = product.category === 'collaboration';
-      
-      // Mapping inverse des couleurs
-      const colorMap: Record<string, string> = {
-        'Coloris Classique': 'Classique',
-        'Blanc Pur': 'Blanc',
-        'Noir Profond': 'Noir',
-        'Bleu Royal': 'Bleu',
-        'Bleu Marine': 'Bleu Foncé',
-        'Rose Pastel': 'Rose',
-        'Vert Kaki': 'Vert',
-      };
-      const origColor = colorMap[product.color] || product.color;
+      const category = categories.find((c) => c.id === product.category);
+      const origColor = getOriginalColor(product.color);
       setOriginalColor(origColor);
 
       setFormData({
-        productType: isBape ? 'Bape x Crocs Classic Clog' : 'Crocs Classic',
+        productType: category ? categoryProductName(category) : product.category,
         category: product.category,
         color: origColor,
         price: product.basePrice.toString(),
@@ -51,7 +66,7 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
       });
       setImages(product.images);
     }
-  }, [product]);
+  }, [product, categories]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -68,14 +83,12 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
     setImages(images.filter((_, i) => i !== index));
   };
 
-  const handleCategoryChange = (category: string) => {
-    const productType = category === 'collaboration' ? 'Bape x Crocs Classic Clog' : 'Crocs Classic';
-    const price = category === 'collaboration' ? '20000' : '15000';
-    setFormData({ 
-      ...formData, 
-      category, 
-      productType,
-      price
+  const handleCategoryChange = (category: Category) => {
+    setFormData({
+      ...formData,
+      category: category.id,
+      productType: categoryProductName(category),
+      price: category.basePrice.toString(),
     });
   };
 
@@ -180,31 +193,27 @@ export default function ProductForm({ product, onClose, onSave }: ProductFormPro
               Catégorie *
             </label>
             <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => handleCategoryChange('classic')}
-                className={`p-4 rounded-xl border-2 text-left transition-all ${
-                  formData.category === 'classic'
-                    ? 'border-primary-600 bg-primary-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <p className="font-bold text-gray-900">Crocs Classic</p>
-                <p className="text-sm text-gray-600">15 000 FCFA</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleCategoryChange('collaboration')}
-                className={`p-4 rounded-xl border-2 text-left transition-all ${
-                  formData.category === 'collaboration'
-                    ? 'border-primary-600 bg-primary-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <p className="font-bold text-gray-900">Bape x Crocs</p>
-                <p className="text-sm text-gray-600">20 000 FCFA</p>
-              </button>
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => handleCategoryChange(category)}
+                  className={`p-4 rounded-xl border-2 text-left transition-all ${
+                    formData.category === category.id
+                      ? 'border-primary-600 bg-primary-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <p className="font-bold text-gray-900">{category.name}</p>
+                  <p className="text-sm text-gray-600">{category.basePrice.toLocaleString('fr-FR')} FCFA</p>
+                </button>
+              ))}
             </div>
+            {categories.length === 0 && (
+              <p className="text-sm text-gray-500">
+                Aucune catégorie active. Créez-en une dans l&apos;onglet Catégories.
+              </p>
+            )}
           </div>
 
           {/* Couleur */}
