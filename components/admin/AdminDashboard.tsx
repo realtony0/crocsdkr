@@ -46,16 +46,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      // Charger les produits depuis l'API (Supabase)
-      const productsRes = await fetch('/api/products');
-      const productsData = await productsRes.json();
-      const allProducts = getAllProductsFromData(productsData);
-      setProducts(allProducts);
+      // Charger les paramètres (catégories incluses) et les produits depuis l'API (Supabase)
+      const [productsRes, settingsRes] = await Promise.all([fetch('/api/products'), fetch('/api/settings')]);
+      const [productsData, settingsData] = await Promise.all([productsRes.json(), settingsRes.json()]);
 
-      // Charger les paramètres depuis l'API (Supabase)
-      const response = await fetch('/api/settings');
-      const settingsData = await response.json();
       setSettings(settingsData);
+      setProducts(getAllProductsFromData(productsData, settingsData?.categories));
     } catch (error) {
       console.error('Erreur:', error);
     }

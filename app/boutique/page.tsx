@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllProductsFromData, Product } from '@/lib/products';
+import { getAllProductsFromData, Product, Category } from '@/lib/products';
 import { getCategories } from '@/lib/settings';
 import ProductCard from '@/components/ProductCard';
 import Image from 'next/image';
@@ -9,16 +9,8 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { MessageCircle, Clock } from 'lucide-react';
 
-interface Category {
-  id: string;
-  name: string;
-  description: string;
-  active: boolean;
-  order: number;
-}
-
 function sortActive(categories: Category[]): Category[] {
-  return categories.filter((c) => c.active).sort((a, b) => a.order - b.order);
+  return categories.filter((c) => c.active).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
 export default function BoutiquePage() {
@@ -32,9 +24,10 @@ export default function BoutiquePage() {
       fetch('/api/settings?section=categories').then((res) => res.json()),
     ])
       .then(([productsData, categoriesData]) => {
-        setProducts(getAllProductsFromData(productsData));
-        if (Array.isArray(categoriesData)) {
-          setCategories(sortActive(categoriesData));
+        const allCategories = Array.isArray(categoriesData) ? categoriesData : [];
+        setProducts(getAllProductsFromData(productsData, allCategories));
+        if (allCategories.length > 0) {
+          setCategories(sortActive(allCategories));
         }
       })
       .catch(() => {

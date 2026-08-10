@@ -24,16 +24,29 @@ const LEGACY_PRODUCT_NAMES: Record<string, string> = {
   collaboration: 'Bape x Crocs Classic Clog',
 };
 
+export interface Category {
+  id: string;
+  name: string;
+  description: string;
+  basePrice: number;
+  active?: boolean;
+  order?: number;
+}
+
 export function categoryProductName(category: { id: string; name: string }): string {
   return LEGACY_PRODUCT_NAMES[category.id] || category.name;
 }
 
-function getProductTypeConfig(): Record<
-  string,
-  { basePrice: number; sizes: number[]; category: string; description: string }
-> {
+// Les catégories sont gérées en direct (Supabase en prod, fichier en repli) via
+// lib/settings-db.ts / l'API /api/settings. Les appelants qui ont accès à cette
+// liste à jour doivent la passer ici pour que les produits ajoutés sous une
+// catégorie récente soient bien reconnus. Sans argument, on retombe sur le
+// fichier statique (moins à jour, mais évite de casser les appelants existants).
+function buildProductTypeConfig(
+  categories: Category[]
+): Record<string, { basePrice: number; sizes: number[]; category: string; description: string }> {
   const config: Record<string, { basePrice: number; sizes: number[]; category: string; description: string }> = {};
-  for (const category of getCategories()) {
+  for (const category of categories) {
     config[categoryProductName(category)] = {
       basePrice: category.basePrice,
       sizes: DEFAULT_SIZES,
@@ -79,10 +92,10 @@ function createProductSlug(productName: string, colorName: string): string {
   return `${productSlug}-${colorSlug}`;
 }
 
-export function getAllProductsFromData(data: any): Product[] {
+export function getAllProductsFromData(data: any, categories?: Category[]): Product[] {
   if (!data || typeof data !== 'object') return [];
   const products: Product[] = [];
-  for (const [productName, base] of Object.entries(getProductTypeConfig())) {
+  for (const [productName, base] of Object.entries(buildProductTypeConfig(categories ?? getCategories()))) {
     const productImages = data[productName];
     if (!productImages || typeof productImages !== 'object') continue;
     for (const [colorName, images] of Object.entries(productImages)) {
@@ -115,16 +128,16 @@ export function getProductBySlug(slug: string): Product | undefined {
   return getAllProducts().find(p => p.slug === slug);
 }
 
-export function getProductBySlugFromData(data: any, slug: string): Product | undefined {
-  return getAllProductsFromData(data).find(p => p.slug === slug);
+export function getProductBySlugFromData(data: any, slug: string, categories?: Category[]): Product | undefined {
+  return getAllProductsFromData(data, categories).find(p => p.slug === slug);
 }
 
-export function getBapeProductsFromData(data: any): Product[] {
-  return getAllProductsFromData(data).filter(p => p.category === 'collaboration');
+export function getBapeProductsFromData(data: any, categories?: Category[]): Product[] {
+  return getAllProductsFromData(data, categories).filter(p => p.category === 'collaboration');
 }
 
-export function getClassicProductsFromData(data: any): Product[] {
-  return getAllProductsFromData(data).filter(p => p.category === 'classic');
+export function getClassicProductsFromData(data: any, categories?: Category[]): Product[] {
+  return getAllProductsFromData(data, categories).filter(p => p.category === 'classic');
 }
 
 export function getAllColors(): string[] {

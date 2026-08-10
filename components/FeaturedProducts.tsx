@@ -15,9 +15,13 @@ export default function FeaturedProducts({ products: productsProp }: FeaturedPro
 
   useEffect(() => {
     if (!productsProp) {
-      fetch('/api/products')
-        .then((res) => res.json())
-        .then((data) => setProducts(getAllProductsFromData(data).slice(0, 6)))
+      Promise.all([
+        fetch('/api/products').then((res) => res.json()),
+        fetch('/api/settings?section=categories').then((res) => res.json()),
+      ])
+        .then(([data, categories]) =>
+          setProducts(getAllProductsFromData(data, Array.isArray(categories) ? categories : undefined).slice(0, 6))
+        )
         .catch(() => setProducts([]));
     }
   }, [productsProp]);

@@ -12,12 +12,17 @@ export default function PanierPage() {
   const { items, removeFromCart, updateQuantity, clearCart } = useCart();
   const [showCheckout, setShowCheckout] = useState(false);
   const [productsData, setProductsData] = useState<any>(null);
+  const [categories, setCategories] = useState<any[] | undefined>(undefined);
 
   useEffect(() => {
     fetch('/api/products')
       .then((res) => res.json())
       .then(setProductsData)
       .catch(() => setProductsData({}));
+    fetch('/api/settings?section=categories')
+      .then((res) => res.json())
+      .then((data) => setCategories(Array.isArray(data) ? data : undefined))
+      .catch(() => {});
   }, []);
 
   const { lineItems, totalPrice } = useMemo(() => {
@@ -25,7 +30,7 @@ export default function PanierPage() {
     let total = 0;
     for (const item of items) {
       const product = productsData
-        ? getProductBySlugFromData(productsData, item.slug)
+        ? getProductBySlugFromData(productsData, item.slug, categories)
         : getProductBySlug(item.slug);
       if (!product) continue;
       const price = product.basePrice * item.quantity;
@@ -40,7 +45,7 @@ export default function PanierPage() {
       });
     }
     return { lineItems: lines, totalPrice: total };
-  }, [items, productsData]);
+  }, [items, productsData, categories]);
 
   if (items.length === 0 && !showCheckout) {
     return (
@@ -67,7 +72,7 @@ export default function PanierPage() {
         {lineItems.map((line) => {
           const cartItem = items.find((i) => i.slug === line.slug && i.size === line.size);
           const product = productsData
-            ? getProductBySlugFromData(productsData, line.slug)
+            ? getProductBySlugFromData(productsData, line.slug, categories)
             : getProductBySlug(line.slug);
           if (!product || !cartItem) return null;
           const image = product.images?.[0];

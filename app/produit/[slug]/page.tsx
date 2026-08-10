@@ -25,10 +25,12 @@ export default function ProductPage({ params }: PageProps) {
 
   useEffect(() => {
     setLoading(true);
-    fetch('/api/products')
-      .then((res) => res.json())
-      .then((data) => {
-        const p = getProductBySlugFromData(data, params.slug);
+    Promise.all([
+      fetch('/api/products').then((res) => res.json()),
+      fetch('/api/settings?section=categories').then((res) => res.json()),
+    ])
+      .then(([data, categories]) => {
+        const p = getProductBySlugFromData(data, params.slug, Array.isArray(categories) ? categories : undefined);
         setProduct(p ?? getProductBySlug(params.slug));
       })
       .catch(() => setProduct(getProductBySlug(params.slug)))
