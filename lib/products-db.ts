@@ -44,16 +44,20 @@ export async function getProductsAsync(): Promise<any> {
 export async function saveProductsAsync(data: any): Promise<void> {
   const supabase = getSupabase();
   if (supabase) {
-    try {
-      const { error } = await supabase.from('crocsdkr_products').upsert(
-        { key: PRODUCTS_KEY, value: data, updated_at: new Date().toISOString() },
-        { onConflict: 'key' }
-      );
-      if (error) throw error;
-      return;
-    } catch (e) {
-      console.error('Supabase saveProducts:', e);
+    // Supabase est configuré : c'est la source de vérité en production. Une
+    // écriture qui échoue ici NE DOIT PAS retomber silencieusement sur le
+    // fichier local (Vercel a un système de fichiers éphémère par requête :
+    // ça donnerait l'impression que ça a marché alors que rien n'est
+    // persisté). On remonte l'erreur pour que l'API réponde un vrai échec.
+    const { error } = await supabase.from('crocsdkr_products').upsert(
+      { key: PRODUCTS_KEY, value: data, updated_at: new Date().toISOString() },
+      { onConflict: 'key' }
+    );
+    if (error) {
+      console.error('Supabase saveProducts:', error);
+      throw error;
     }
+    return;
   }
   saveProductsToFile(data);
 }

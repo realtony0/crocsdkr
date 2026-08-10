@@ -35,7 +35,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, message: 'Produit ajouté avec succès' });
   } catch (error) {
     console.error('Erreur:', error);
-    return NextResponse.json({ error: 'Erreur lors de l\'ajout du produit' }, { status: 500 });
+    const detail = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: `Erreur lors de l'ajout du produit : ${detail}` }, { status: 500 });
   }
 }
 
@@ -64,7 +65,8 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ success: true, message: 'Produit modifié avec succès' });
   } catch (error) {
     console.error('Erreur:', error);
-    return NextResponse.json({ error: 'Erreur lors de la modification du produit' }, { status: 500 });
+    const detail = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: `Erreur lors de la modification du produit : ${detail}` }, { status: 500 });
   }
 }
 
@@ -95,6 +97,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true, message: 'Produit supprimé avec succès' });
   } catch (error) {
     console.error('Erreur:', error);
-    return NextResponse.json({ error: 'Erreur lors de la suppression du produit' }, { status: 500 });
+    const detail = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: `Erreur lors de la suppression du produit : ${detail}` }, { status: 500 });
   }
 }

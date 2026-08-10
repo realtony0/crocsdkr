@@ -44,16 +44,20 @@ export async function getSettingsAsync(): Promise<any> {
 export async function saveSettingsAsync(settings: any): Promise<void> {
   const supabase = getSupabase();
   if (supabase) {
-    try {
-      const { error } = await supabase.from('crocsdkr_settings').upsert(
-        { key: SETTINGS_KEY, value: settings, updated_at: new Date().toISOString() },
-        { onConflict: 'key' }
-      );
-      if (error) throw error;
-      return;
-    } catch (e) {
-      console.error('Supabase saveSettings:', e);
+    // Supabase est configuré : c'est la source de vérité en production. Une
+    // écriture qui échoue ici NE DOIT PAS retomber silencieusement sur le
+    // fichier local (Vercel a un système de fichiers éphémère par requête :
+    // ça donnerait l'impression que ça a marché alors que rien n'est
+    // persisté). On remonte l'erreur pour que l'API réponde un vrai échec.
+    const { error } = await supabase.from('crocsdkr_settings').upsert(
+      { key: SETTINGS_KEY, value: settings, updated_at: new Date().toISOString() },
+      { onConflict: 'key' }
+    );
+    if (error) {
+      console.error('Supabase saveSettings:', error);
+      throw error;
     }
+    return;
   }
   saveSettingsToFile(settings);
 }

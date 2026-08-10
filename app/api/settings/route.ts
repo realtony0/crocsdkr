@@ -44,7 +44,8 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ success: true, message: 'Paramètres mis à jour' });
   } catch (error) {
     console.error('Erreur:', error);
-    return NextResponse.json({ error: 'Erreur lors de la mise à jour' }, { status: 500 });
+    const detail = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: `Erreur lors de la mise à jour : ${detail}` }, { status: 500 });
   }
 }
 
@@ -71,7 +72,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, item });
   } catch (error) {
     console.error('Erreur:', error);
-    return NextResponse.json({ error: 'Erreur' }, { status: 500 });
+    const detail = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: `Erreur lors de l'ajout : ${detail}` }, { status: 500 });
   }
 }
 
@@ -97,6 +99,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Erreur:', error);
-    return NextResponse.json({ error: 'Erreur' }, { status: 500 });
+    const detail = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: `Erreur lors de la suppression : ${detail}` }, { status: 500 });
   }
 }
