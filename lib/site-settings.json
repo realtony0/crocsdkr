@@ -88,6 +88,30 @@
       "basePrice": 20000,
       "active": true,
       "order": 1
+    },
+    {
+      "id": "spiderman",
+      "name": "Crocs x Spiderman",
+      "description": "Édition spéciale Spiderman",
+      "basePrice": 18000,
+      "active": true,
+      "order": 3
+    },
+    {
+      "id": "fille",
+      "name": "Crocs Fille",
+      "description": "Le confort original adapté aux filles",
+      "basePrice": 13000,
+      "active": true,
+      "order": 4
+    },
+    {
+      "id": "pins",
+      "name": "Pins",
+      "description": "Personnalisez vos Crocs avec des pins",
+      "basePrice": 2000,
+      "active": true,
+      "order": 5
     }
   ],
   "admin": {

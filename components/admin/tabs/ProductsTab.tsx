@@ -2,16 +2,26 @@
 
 import { useState } from 'react';
 import { Plus, Edit2, Trash2, Image as ImageIcon, Eye, EyeOff, Star } from 'lucide-react';
-import { Product } from '@/lib/products';
+import { Product, categoryProductName, getOriginalColor } from '@/lib/products';
 import ProductForm from '../ProductForm';
 import ImageUpload from '../ImageUpload';
 
+interface Category {
+  id: string;
+  name: string;
+  description: string;
+  basePrice: number;
+  active: boolean;
+  order: number;
+}
+
 interface ProductsTabProps {
   products: Product[];
+  categories: Category[];
   onRefresh: () => void;
 }
 
-export default function ProductsTab({ products, onRefresh }: ProductsTabProps) {
+export default function ProductsTab({ products, categories, onRefresh }: ProductsTabProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showImageUpload, setShowImageUpload] = useState(false);
@@ -34,20 +44,9 @@ export default function ProductsTab({ products, onRefresh }: ProductsTabProps) {
     setIsDeleting(product.id);
 
     try {
-      const productType = product.category === 'collaboration' 
-        ? 'Bape x Crocs Classic Clog' 
-        : 'Crocs Classic';
-      
-      const colorMap: Record<string, string> = {
-        'Coloris Classique': 'Classique',
-        'Blanc Pur': 'Blanc',
-        'Noir Profond': 'Noir',
-        'Bleu Royal': 'Bleu',
-        'Bleu Marine': 'Bleu Foncé',
-        'Rose Pastel': 'Rose',
-        'Vert Kaki': 'Vert',
-      };
-      const originalColor = colorMap[product.color] || product.color;
+      const category = categories.find((c) => c.id === product.category);
+      const productType = category ? categoryProductName(category) : product.category;
+      const originalColor = getOriginalColor(product.color);
 
       const response = await fetch(
         `/api/products?productType=${encodeURIComponent(productType)}&color=${encodeURIComponent(originalColor)}`,
@@ -107,9 +106,6 @@ export default function ProductsTab({ products, onRefresh }: ProductsTabProps) {
     window.location.reload();
   };
 
-  const bapeProducts = products.filter(p => p.category === 'collaboration');
-  const classicProducts = products.filter(p => p.category === 'classic');
-
   return (
     <div className="p-6">
       {/* Header */}
@@ -133,47 +129,33 @@ export default function ProductsTab({ products, onRefresh }: ProductsTabProps) {
         </div>
       </div>
 
-      {/* Liste des produits */}
+      {/* Liste des produits, groupés par catégorie */}
       <div className="space-y-8">
-        {/* Bape x Crocs */}
-        {bapeProducts.length > 0 && (
-          <div>
-            <h3 className="text-lg font-bold text-purple-600 mb-3">Bape x Crocs ({bapeProducts.length})</h3>
-            <div className="space-y-2">
-              {bapeProducts.map((product) => (
-                <ProductRow
-                  key={product.id}
-                  product={product}
-                  status={productStatuses[product.id]}
-                  onEdit={handleEditProduct}
-                  onDelete={handleDeleteProduct}
-                  onToggleStatus={toggleProductStatus}
-                  isDeleting={isDeleting === product.id}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+        {categories.map((category) => {
+          const categoryProducts = products.filter((p) => p.category === category.id);
+          if (categoryProducts.length === 0) return null;
 
-        {/* Crocs Classic */}
-        {classicProducts.length > 0 && (
-          <div>
-            <h3 className="text-lg font-bold text-blue-600 mb-3">Crocs Classic ({classicProducts.length})</h3>
-            <div className="space-y-2">
-              {classicProducts.map((product) => (
-                <ProductRow
-                  key={product.id}
-                  product={product}
-                  status={productStatuses[product.id]}
-                  onEdit={handleEditProduct}
-                  onDelete={handleDeleteProduct}
-                  onToggleStatus={toggleProductStatus}
-                  isDeleting={isDeleting === product.id}
-                />
-              ))}
+          return (
+            <div key={category.id}>
+              <h3 className="text-lg font-bold text-gray-700 mb-3">
+                {category.name} ({categoryProducts.length})
+              </h3>
+              <div className="space-y-2">
+                {categoryProducts.map((product) => (
+                  <ProductRow
+                    key={product.id}
+                    product={product}
+                    status={productStatuses[product.id]}
+                    onEdit={handleEditProduct}
+                    onDelete={handleDeleteProduct}
+                    onToggleStatus={toggleProductStatus}
+                    isDeleting={isDeleting === product.id}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })}
 
         {products.length === 0 && (
           <div className="text-center py-12 text-gray-500">

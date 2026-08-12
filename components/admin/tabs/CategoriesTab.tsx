@@ -100,26 +100,33 @@ export default function CategoriesTab({ categories, onUpdate }: CategoriesTabPro
         const updatedItems = items.map(i =>
           i.id === editingItem.id ? { ...i, ...data } : i
         );
-        await fetch('/api/settings', {
+        const response = await fetch('/api/settings', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ section: 'categories', data: updatedItems }),
         });
+        const result = await response.json();
+        if (!result.success) {
+          alert('Erreur: ' + (result.error || 'Erreur inconnue'));
+          return;
+        }
         setItems(updatedItems);
       } else {
         const newOrder = items.length > 0 ? Math.max(...items.map(i => i.order)) + 1 : 1;
         const response = await fetch('/api/settings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            section: 'categories', 
-            item: { ...data, active: true, order: newOrder } 
+          body: JSON.stringify({
+            section: 'categories',
+            item: { ...data, active: true, order: newOrder }
           }),
         });
         const result = await response.json();
-        if (result.success) {
-          setItems([...items, result.item]);
+        if (!result.success) {
+          alert('Erreur: ' + (result.error || 'Erreur inconnue'));
+          return;
         }
+        setItems([...items, result.item]);
       }
       setShowForm(false);
       onUpdate();

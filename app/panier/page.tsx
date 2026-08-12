@@ -12,12 +12,17 @@ export default function PanierPage() {
   const { items, removeFromCart, updateQuantity, clearCart } = useCart();
   const [showCheckout, setShowCheckout] = useState(false);
   const [productsData, setProductsData] = useState<any>(null);
+  const [categories, setCategories] = useState<any[] | undefined>(undefined);
 
   useEffect(() => {
     fetch('/api/products')
       .then((res) => res.json())
       .then(setProductsData)
       .catch(() => setProductsData({}));
+    fetch('/api/settings?section=categories')
+      .then((res) => res.json())
+      .then((data) => setCategories(Array.isArray(data) ? data : undefined))
+      .catch(() => {});
   }, []);
 
   const { lineItems, totalPrice } = useMemo(() => {
@@ -25,7 +30,7 @@ export default function PanierPage() {
     let total = 0;
     for (const item of items) {
       const product = productsData
-        ? getProductBySlugFromData(productsData, item.slug)
+        ? getProductBySlugFromData(productsData, item.slug, categories)
         : getProductBySlug(item.slug);
       if (!product) continue;
       const price = product.basePrice * item.quantity;
@@ -40,7 +45,7 @@ export default function PanierPage() {
       });
     }
     return { lineItems: lines, totalPrice: total };
-  }, [items, productsData]);
+  }, [items, productsData, categories]);
 
   if (items.length === 0 && !showCheckout) {
     return (
@@ -50,7 +55,7 @@ export default function PanierPage() {
         <p className="text-gray-600 mb-8">Ajoutez des articles depuis la boutique.</p>
         <Link
           href="/boutique"
-          className="inline-flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-primary-700"
+          className="inline-flex items-center gap-2 bg-primary-600 text-white px-6 py-3 font-bold hover:bg-primary-700"
         >
           Voir la boutique
           <ArrowRight className="h-5 w-5" />
@@ -67,7 +72,7 @@ export default function PanierPage() {
         {lineItems.map((line) => {
           const cartItem = items.find((i) => i.slug === line.slug && i.size === line.size);
           const product = productsData
-            ? getProductBySlugFromData(productsData, line.slug)
+            ? getProductBySlugFromData(productsData, line.slug, categories)
             : getProductBySlug(line.slug);
           if (!product || !cartItem) return null;
           const image = product.images?.[0];
@@ -138,14 +143,14 @@ export default function PanierPage() {
         <div className="flex gap-3">
           <Link
             href="/boutique"
-            className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50"
+            className="px-6 py-3 border-2 border-gray-300 text-gray-700 font-bold hover:bg-gray-50"
           >
             Continuer mes achats
           </Link>
           <button
             type="button"
             onClick={() => setShowCheckout(true)}
-            className="px-6 py-3 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 flex items-center gap-2"
+            className="px-6 py-3 bg-primary-600 text-white font-bold hover:bg-primary-700 flex items-center gap-2"
           >
             Passer la commande
             <ArrowRight className="h-5 w-5" />

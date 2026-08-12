@@ -25,10 +25,12 @@ export default function ProductPage({ params }: PageProps) {
 
   useEffect(() => {
     setLoading(true);
-    fetch('/api/products')
-      .then((res) => res.json())
-      .then((data) => {
-        const p = getProductBySlugFromData(data, params.slug);
+    Promise.all([
+      fetch('/api/products').then((res) => res.json()),
+      fetch('/api/settings?section=categories').then((res) => res.json()),
+    ])
+      .then(([data, categories]) => {
+        const p = getProductBySlugFromData(data, params.slug, Array.isArray(categories) ? categories : undefined);
         setProduct(p ?? getProductBySlug(params.slug));
       })
       .catch(() => setProduct(getProductBySlug(params.slug)))
@@ -129,7 +131,7 @@ export default function ProductPage({ params }: PageProps) {
               <motion.button
                 onClick={handleAddToCart}
                 disabled={!selectedSize}
-                className="flex-1 bg-gray-900 text-white py-4 px-6 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:bg-gray-800 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="flex-1 bg-gray-900 text-white py-4 px-6 font-semibold text-lg flex items-center justify-center gap-2 hover:bg-gray-800 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
                 whileHover={{ scale: selectedSize ? 1.02 : 1 }}
                 whileTap={{ scale: selectedSize ? 0.98 : 1 }}
               >
@@ -139,7 +141,7 @@ export default function ProductPage({ params }: PageProps) {
               <motion.button
                 onClick={handleOrderClick}
                 disabled={!selectedSize}
-                className="flex-1 bg-primary-600 text-white py-4 px-6 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:bg-primary-700 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                className="flex-1 bg-primary-600 text-white py-4 px-6 font-semibold text-lg flex items-center justify-center gap-2 hover:bg-primary-700 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
                 whileHover={{ scale: selectedSize ? 1.02 : 1 }}
                 whileTap={{ scale: selectedSize ? 0.98 : 1 }}
               >
