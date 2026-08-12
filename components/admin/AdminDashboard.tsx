@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  LogOut, Package, Settings, MessageSquare, Award, 
-  Layers, Home, Shield, RefreshCw, ShoppingBag
+import {
+  LogOut, Package, Settings, MessageSquare, Award,
+  Layers, Home, Shield, RefreshCw, ShoppingBag, LayoutDashboard
 } from 'lucide-react';
 import { getAllProductsFromData, Product } from '@/lib/products';
+import DashboardTab from './tabs/DashboardTab';
 import ProductsTab from './tabs/ProductsTab';
 import HeroTab from './tabs/HeroTab';
 import ContactTab from './tabs/ContactTab';
@@ -20,9 +21,10 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type TabType = 'products' | 'orders' | 'hero' | 'contact' | 'testimonials' | 'whyus' | 'categories' | 'settings';
+type TabType = 'dashboard' | 'products' | 'orders' | 'hero' | 'contact' | 'testimonials' | 'whyus' | 'categories' | 'settings';
 
 const tabs = [
+  { id: 'dashboard' as TabType, label: 'Tableau de bord', icon: LayoutDashboard },
   { id: 'products' as TabType, label: 'Produits', icon: Package },
   { id: 'orders' as TabType, label: 'Commandes', icon: ShoppingBag },
   { id: 'hero' as TabType, label: 'Page d\'accueil', icon: Home },
@@ -34,7 +36,7 @@ const tabs = [
 ];
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('products');
+  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [products, setProducts] = useState<Product[]>([]);
   const [settings, setSettings] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,9 +65,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     const settingsData = await response.json();
     setSettings(settingsData);
   };
-
-  const bapeProducts = products.filter(p => p.category === 'collaboration');
-  const classicProducts = products.filter(p => p.category === 'classic');
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -112,27 +111,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <EnablePushBanner />
-        {/* Stats rapides */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-xl shadow-sm">
-            <p className="text-sm text-gray-600">Total produits</p>
-            <p className="text-2xl font-black text-gray-900">{products.length}</p>
-          </div>
-          <div className="bg-white p-4 rounded-xl shadow-sm">
-            <p className="text-sm text-gray-600">Bape x Crocs</p>
-            <p className="text-2xl font-black text-purple-600">{bapeProducts.length}</p>
-          </div>
-          <div className="bg-white p-4 rounded-xl shadow-sm">
-            <p className="text-sm text-gray-600">Crocs Classic</p>
-            <p className="text-2xl font-black text-blue-600">{classicProducts.length}</p>
-          </div>
-          <div className="bg-white p-4 rounded-xl shadow-sm">
-            <p className="text-sm text-gray-600">Mode maintenance</p>
-            <p className="text-2xl font-black text-gray-900">
-              {settings?.maintenance?.enabled ? '🔴 Actif' : '🟢 Inactif'}
-            </p>
-          </div>
-        </div>
 
         {/* Navigation par onglets */}
         <div className="bg-white rounded-xl shadow-sm mb-6 overflow-x-auto">
@@ -164,6 +142,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-sm">
+            {activeTab === 'dashboard' && (
+              <DashboardTab products={products} categories={settings?.categories ?? []} onNavigate={setActiveTab} />
+            )}
             {activeTab === 'products' && (
               <ProductsTab products={products} categories={settings?.categories ?? []} onRefresh={loadData} />
             )}
