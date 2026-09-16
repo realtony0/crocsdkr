@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { getSupabase } from './supabase';
+import { getSupabase, withTimeout } from './supabase';
 
 const SETTINGS_FILE = path.join(process.cwd(), 'lib', 'site-settings.json');
 const SETTINGS_KEY = 'site';
@@ -22,19 +22,29 @@ export async function getSettingsAsync(): Promise<any> {
   const supabase = getSupabase();
   if (supabase) {
     try {
-      const { data: rows, error } = await supabase
-        .from('crocsdkr_settings')
-        .select('value')
-        .eq('key', SETTINGS_KEY)
-        .maybeSingle();
+      const { data: rows, error } = await withTimeout(
+        supabase
+          .from('crocsdkr_settings')
+          .select('value')
+          .eq('key', SETTINGS_KEY)
+          .maybeSingle(),
+        'getSettings'
+      );
       if (error) throw error;
       if (rows?.value) return rows.value as any;
       const fileSettings = getSettingsFromFile();
       if (fileSettings) {
-        await saveSettingsAsync(fileSettings);
+        // Amorçage de la table : ne doit jamais empêcher de servir la page.
+        try {
+          await saveSettingsAsync(fileSettings);
+        } catch (e) {
+          console.error('Supabase seedSettings:', e);
+        }
         return fileSettings;
       }
     } catch (e) {
+      // Erreur ou dépassement de délai : on sert les réglages locaux plutôt
+      // que de laisser le rendu serveur bloqué sur le spinner.
       console.error('Supabase getSettings:', e);
     }
   }
@@ -49,9 +59,12 @@ export async function saveSettingsAsync(settings: any): Promise<void> {
     // fichier local (Vercel a un système de fichiers éphémère par requête :
     // ça donnerait l'impression que ça a marché alors que rien n'est
     // persisté). On remonte l'erreur pour que l'API réponde un vrai échec.
-    const { error } = await supabase.from('crocsdkr_settings').upsert(
-      { key: SETTINGS_KEY, value: settings, updated_at: new Date().toISOString() },
-      { onConflict: 'key' }
+    const { error } = await withTimeout(
+      supabase.from('crocsdkr_settings').upsert(
+        { key: SETTINGS_KEY, value: settings, updated_at: new Date().toISOString() },
+        { onConflict: 'key' }
+      ),
+      'saveSettings'
     );
     if (error) {
       console.error('Supabase saveSettings:', error);
