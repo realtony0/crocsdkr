@@ -13,10 +13,18 @@ const ICONS: Record<string, any> = {
   Zap,
 };
 
-export default function WhyUs() {
-  const [features, setFeatures] = useState<any[]>(getWhyUs());
+interface WhyUsProps {
+  // Rendus côté serveur ; sinon on retombe sur le fichier figé au build.
+  items?: any[];
+}
+
+export default function WhyUs({ items: initial }: WhyUsProps = {}) {
+  const [features, setFeatures] = useState<any[]>(
+    initial ? initial.filter((w: any) => w.active) : getWhyUs()
+  );
 
   useEffect(() => {
+    if (initial) return;
     fetch('/api/settings?section=whyUs')
       .then((res) => res.json())
       .then((data) => {
@@ -25,7 +33,7 @@ export default function WhyUs() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [initial]);
 
   if (features.length === 0) return null;
 

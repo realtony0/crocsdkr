@@ -6,10 +6,17 @@ import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 import { getHeroSettings } from '@/lib/settings';
 
-export default function Hero() {
-  const [settings, setSettings] = useState(getHeroSettings());
+interface HeroProps {
+  // Réglages rendus côté serveur : déjà à jour, donc le HTML servi porte
+  // les vraies valeurs au lieu de celles figées au moment du build.
+  settings?: any;
+}
+
+export default function Hero({ settings: initial }: HeroProps = {}) {
+  const [settings, setSettings] = useState(initial ?? getHeroSettings());
 
   useEffect(() => {
+    if (initial) return;
     fetch('/api/settings?section=hero')
       .then((res) => res.json())
       .then((data) => {
@@ -18,7 +25,7 @@ export default function Hero() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [initial]);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">

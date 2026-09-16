@@ -16,16 +16,22 @@ interface Category {
 
 interface CategoriesProps {
   products: Product[];
+  // Catégories rendues côté serveur ; sans elles on retombe sur le fichier
+  // embarqué au build, qui peut être périmé.
+  categories?: Category[];
 }
 
 function sortActive(categories: Category[]): Category[] {
   return categories.filter((c) => c.active).sort((a, b) => a.order - b.order);
 }
 
-export default function Categories({ products }: CategoriesProps) {
-  const [categories, setCategories] = useState<Category[]>(getCategories());
+export default function Categories({ products, categories: initial }: CategoriesProps) {
+  const [categories, setCategories] = useState<Category[]>(
+    initial ? sortActive(initial) : getCategories()
+  );
 
   useEffect(() => {
+    if (initial) return;
     fetch('/api/settings?section=categories')
       .then((res) => res.json())
       .then((data) => {
@@ -34,7 +40,7 @@ export default function Categories({ products }: CategoriesProps) {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [initial]);
 
   if (categories.length === 0) return null;
 

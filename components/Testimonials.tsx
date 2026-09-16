@@ -4,10 +4,18 @@ import { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
 import { getTestimonials } from '@/lib/settings';
 
-export default function Testimonials() {
-  const [testimonials, setTestimonials] = useState<any[]>(getTestimonials());
+interface TestimonialsProps {
+  // Rendus côté serveur ; sinon on retombe sur le fichier figé au build.
+  items?: any[];
+}
+
+export default function Testimonials({ items: initial }: TestimonialsProps = {}) {
+  const [testimonials, setTestimonials] = useState<any[]>(
+    initial ? initial.filter((t: any) => t.active) : getTestimonials()
+  );
 
   useEffect(() => {
+    if (initial) return;
     fetch('/api/settings?section=testimonials')
       .then((res) => res.json())
       .then((data) => {
@@ -16,7 +24,7 @@ export default function Testimonials() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [initial]);
 
   if (testimonials.length === 0) return null;
 

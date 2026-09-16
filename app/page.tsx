@@ -19,11 +19,11 @@ export default async function Home() {
   const allProducts = getAllProductsFromData(data, settings?.categories);
   return (
     <>
-      <Hero />
-      <Categories products={allProducts} />
+      <Hero settings={settings?.hero} />
+      <Categories products={allProducts} categories={settings?.categories} />
       <FeaturedProducts products={allProducts.slice(0, 6)} />
-      <WhyUs />
-      <Testimonials />
+      <WhyUs items={settings?.whyUs} />
+      <Testimonials items={settings?.testimonials} />
     </>
   );
 }
