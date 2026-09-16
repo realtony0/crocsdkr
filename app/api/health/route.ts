@@ -25,10 +25,12 @@ async function chrono(nom: string, fn: () => Promise<string>): Promise<Check> {
   } catch (e: any) {
     const ms = Date.now() - t0;
     const cause = e?.cause?.code || e?.cause?.message || '';
-    const detail = [e?.name, e?.message, e?.code, e?.hint, cause]
+    const detail = [e?.name, e?.message, e?.code, e?.hint, e?.details, cause]
       .filter(Boolean)
       .join(' | ');
-    return { nom, ok: false, ms, detail: detail || String(e) };
+    // Les erreurs Supabase sont des objets simples, pas des Error : String()
+    // donnerait "[object Object]" et masquerait la vraie cause.
+    return { nom, ok: false, ms, detail: detail || serialiser(e) };
   }
 }
 
@@ -114,6 +116,16 @@ export async function GET() {
     { verdict: verdict(checks, env), env, checks },
     { status: echecs.length ? 500 : 200 }
   );
+}
+
+function serialiser(e: any): string {
+  try {
+    const json = JSON.stringify(e);
+    if (json && json !== '{}') return json;
+  } catch {
+    /* objet non sérialisable */
+  }
+  return Object.prototype.toString.call(e);
 }
 
 function lireRoleJwt(key: string): string | null {
