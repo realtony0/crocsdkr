@@ -7,7 +7,12 @@ import { getProductsAsync } from '@/lib/products-db';
 import { getSettingsAsync } from '@/lib/settings-db';
 import { getAllProductsFromData } from '@/lib/products';
 
-export const dynamic = 'force-dynamic';
+// La page est rendue une fois puis servie depuis le cache, au lieu
+// d'interroger Supabase à chaque visite. Le délai ci-dessous n'est qu'un
+// filet de sécurité : toute écriture de l'admin invalide immédiatement le
+// cache (revalidatePath dans app/api/products et app/api/settings), donc
+// les ajouts de produits apparaissent sans attendre.
+export const revalidate = 600;
 
 export default async function Home() {
   const [data, settings] = await Promise.all([getProductsAsync(), getSettingsAsync()]);

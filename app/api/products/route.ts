@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getProductsAsync, saveProductsAsync } from '@/lib/products-db';
+
+// Le cache de la page d'accueil doit refléter immédiatement toute
+// modification faite depuis l'admin.
+function rafraichirVitrine() {
+  revalidatePath('/');
+}
 
 // GET - Récupérer tous les produits
 export async function GET() {
@@ -31,6 +38,7 @@ export async function POST(request: NextRequest) {
     data[productType][color] = images;
 
     await saveProductsAsync(data);
+    rafraichirVitrine();
 
     return NextResponse.json({ success: true, message: 'Produit ajouté avec succès' });
   } catch (error) {
@@ -61,6 +69,7 @@ export async function PUT(request: NextRequest) {
     data[productType][newColor] = images;
 
     await saveProductsAsync(data);
+    rafraichirVitrine();
 
     return NextResponse.json({ success: true, message: 'Produit modifié avec succès' });
   } catch (error) {
@@ -92,6 +101,7 @@ export async function DELETE(request: NextRequest) {
         delete data[productType];
       }
       await saveProductsAsync(data);
+      rafraichirVitrine();
     }
 
     return NextResponse.json({ success: true, message: 'Produit supprimé avec succès' });

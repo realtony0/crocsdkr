@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getSettingsAsync, saveSettingsAsync } from '@/lib/settings-db';
+
+// Le cache de la page d'accueil doit refléter immédiatement toute
+// modification faite depuis l'admin.
+function rafraichirVitrine() {
+  revalidatePath('/');
+}
 
 // GET - Récupérer les paramètres
 export async function GET(request: NextRequest) {
@@ -40,6 +47,7 @@ export async function PUT(request: NextRequest) {
     }
 
     await saveSettingsAsync(settings);
+    rafraichirVitrine();
 
     return NextResponse.json({ success: true, message: 'Paramètres mis à jour' });
   } catch (error) {
@@ -68,6 +76,7 @@ export async function POST(request: NextRequest) {
     settings[section].push(item);
 
     await saveSettingsAsync(settings);
+    rafraichirVitrine();
 
     return NextResponse.json({ success: true, item });
   } catch (error) {
@@ -95,6 +104,7 @@ export async function DELETE(request: NextRequest) {
 
     settings[section] = settings[section].filter((item: any) => item.id !== id);
     await saveSettingsAsync(settings);
+    rafraichirVitrine();
 
     return NextResponse.json({ success: true });
   } catch (error) {
