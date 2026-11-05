@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { CartProvider } from "@/context/CartContext";
 import InstallAppBanner from "@/components/InstallAppBanner";
+import MetaPixel from "@/components/MetaPixel";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -50,6 +51,7 @@ export default function RootLayout({
           <main className="min-h-screen">{children}</main>
           <Footer />
           <InstallAppBanner />
+          <MetaPixel />
         </CartProvider>
       </body>
     </html>
