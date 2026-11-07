@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, ShoppingBag } from 'lucide-react';
 import { buildChatLink } from '@/lib/chat-link';
+import { suivreAchat } from '@/lib/meta-pixel';
 
 export interface CartLineItem {
   name: string;
@@ -93,6 +94,10 @@ export default function CartCheckoutForm({ items, totalPrice, onClose, onSuccess
 
       const data = await response.json().catch(() => ({} as any));
       const orderId = response.ok ? (data?.orderId ?? '') : '';
+      // Déclenché avant la redirection vers WhatsApp, qui quitte le site.
+      if (response.ok) {
+        suivreAchat(orderId, items.map((it) => ({ slug: it.slug, quantity: it.quantity })), totalPrice);
+      }
       const contactNumber = await contactNumberPromise;
 
       const msg = buildOrderMessage(orderId);

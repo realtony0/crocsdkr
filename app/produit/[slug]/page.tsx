@@ -6,6 +6,7 @@ import { getProductBySlugFromData, getProductBySlug, Product } from '@/lib/produ
 import ImageCarousel from '@/components/ImageCarousel';
 import OrderForm from '@/components/OrderForm';
 import { useCart } from '@/context/CartContext';
+import { suivreVueProduit, suivreAjoutPanier, suivreDebutCommande } from '@/lib/meta-pixel';
 import { motion } from 'framer-motion';
 import { ShoppingBag, ShoppingCart } from 'lucide-react';
 
@@ -37,6 +38,10 @@ export default function ProductPage({ params }: PageProps) {
       .finally(() => setLoading(false));
   }, [params.slug]);
 
+  useEffect(() => {
+    if (product) suivreVueProduit(product);
+  }, [product]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -57,6 +62,7 @@ export default function ProductPage({ params }: PageProps) {
       alert('Veuillez sélectionner une pointure');
       return;
     }
+    suivreDebutCommande([{ slug: product.slug, quantity: 1 }], product.basePrice);
     setShowOrderForm(true);
   };
 
@@ -66,6 +72,7 @@ export default function ProductPage({ params }: PageProps) {
       return;
     }
     addToCart(product.slug, selectedSize);
+    suivreAjoutPanier(product);
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
   };

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import { getProductBySlugFromData, getProductBySlug } from '@/lib/products';
 import CartCheckoutForm, { CartLineItem } from '@/components/CartCheckoutForm';
+import { suivreDebutCommande } from '@/lib/meta-pixel';
 import { ShoppingCart, Trash2, Minus, Plus, ArrowRight } from 'lucide-react';
 
 export default function PanierPage() {
@@ -149,7 +150,10 @@ export default function PanierPage() {
           </Link>
           <button
             type="button"
-            onClick={() => setShowCheckout(true)}
+            onClick={() => {
+              suivreDebutCommande(lineItems, totalPrice);
+              setShowCheckout(true);
+            }}
             className="px-6 py-3 bg-primary-600 text-white font-bold hover:bg-primary-700 flex items-center gap-2"
           >
             Passer la commande

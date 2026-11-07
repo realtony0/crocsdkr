@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { X, ShoppingBag } from 'lucide-react';
 import { Product } from '@/lib/products';
 import { buildChatLink } from '@/lib/chat-link';
+import { suivreAchat } from '@/lib/meta-pixel';
 
 interface OrderFormProps {
   product: Product;
@@ -87,6 +88,10 @@ export default function OrderForm({ product, selectedSize, onClose, onSuccess }:
 
       const data = await response.json().catch(() => ({} as any));
       const orderId = response.ok ? (data?.orderId ?? '') : '';
+      // Déclenché avant la redirection vers WhatsApp, qui quitte le site.
+      if (response.ok) {
+        suivreAchat(orderId, [{ slug: product.slug, quantity: 1 }], totalPrice);
+      }
       const contactNumber = await contactNumberPromise;
 
       const msg = buildOrderMessage(orderId);
